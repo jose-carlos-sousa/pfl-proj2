@@ -22,7 +22,7 @@ print_column_labels(Size) :-
 
 print_columns(Col, Size) :-
     Col =< Size,
-    format('~w ', [Col]),
+    format('~w  ', [Col]),
     NextCol is Col + 1,
     print_columns(NextCol, Size).
 print_columns(_, _).
@@ -41,7 +41,18 @@ print_row([Cell | Rest]) :-
     write(' '),
     print_row(Rest).
 
-print_cell(empty) :- write('.').
-print_cell(red)   :- write('R').
-print_cell(blue)  :- write('B').
-print_cell(black) :- write('W').
+print_cell(empty) :- 
+    write('\e[0m.'), 
+    write(' ').
+print_cell(red) :-   
+    write('\e[31mO'), 
+    write('\e[0m'),    
+    write(' ').
+print_cell(blue) :-  
+    write('\e[34m0'), 
+    write('\e[0m'),    
+    write(' ').
+print_cell(black) :- 
+    write('\e[30mX'),
+    write('\e[0m'),   
+    write(' ').
