@@ -55,7 +55,7 @@ init_board_cell(X,Size, blue,Size) :-
 init_board_cell(X,Y, empty,Size).
 
 
-initial_state(Size-GameMode,Board-0) :-
+initial_state(Size-GameMode,Board-red) :-
     init_board(Size,Board).
     
 read_number(X) :-
@@ -80,22 +80,75 @@ digit_value(Code, Digit) :-
     Digit >= 0,
     Digit =< 9.
 
-get_board_size(Size) :-
-    repeat,
-    write('Please select the board size (must be an even number larger than 2): '),
-    (   read_number(Value) ->
-        (   Value > 2, Value mod 2 =:= 0 ->
-            Size = Value, !;
-            write('Invalid input. Try again.'), nl, fail
-        );
-        write('Invalid input. Try again.'), nl, skip_line, fail
-    ).
 
+get_cell(Board, Row, Col, Cell) :-
+    nth1(Row, Board, BoardRow), 
+    nth1(Col, BoardRow, Cell).
+
+valid_move(Board-CurPlayer,  StartRow-StartCol, EndRow-EndCol ) :-
+    player_has_cell(Board, StartRow-StartCol, CurPlayer),
+    write('Player has cell'),nl,
+    is_valid_queen_move(Board, StartRow-StartCol, EndRow-EndCol),
+    write('Valid queen move'),nl,
+    is_destination_empty(Board,  EndRow-EndCol),
+    write('empty des').
+
+player_has_cell(Board, Row-Col, Player) :-
+    get_cell(Board, Row, Col, Player).
+is_valid_queen_move(Board, StartRow-StartCol, EndRow-EndCol) :-
+    player_has_cell(Board, StartRow-StartCol, CurPlayer),
+    valid_direction(StartRow, StartCol, EndRow, EndCol, DirRow, DirCol),
+    path_is_clear(Board, StartRow-StartCol, EndRow-EndCol, DirRow, DirCol).
+
+
+valid_direction(StartRow, StartCol, EndRow, EndCol, DirRow, DirCol) :-
+    DirRow is sign(EndRow - StartRow), 
+    DirCol is sign(EndCol - StartCol), 
+    (DirRow \= 0; DirCol \= 0).       
+
+path_is_clear(Board, StartRow-StartCol, EndRow-EndCol, DirRow, DirCol) :-
+    NextRow is StartRow + DirRow,
+    NextCol is StartCol + DirCol,
+    (NextRow =:= EndRow, NextCol =:= EndCol ;
+     get_cell(Board, NextRow, NextCol, empty),
+     path_is_clear(Board, NextRow-NextCol, EndRow-EndCol, DirRow, DirCol)).
+
+is_destination_empty(Board, Row-Col) :-
+    get_cell(Board, Row, Col, empty).
+
+move(Board-CurPlayer, StartRow-StartCol, EndRow-EndCol, NewBoard-NewCurPlayer) :-
+    set_cell(Board, StartRow-StartCol, black, UpdatedBoard),
+    write('set cell'),nl,
+    set_cell(UpdatedBoard, EndRow-EndCol, CurPlayer, NewBoard),
+    write('set cell'),nl,
+    switch_player(CurPlayer, NewCurPlayer).
+switch_player(red, blue).
+switch_player(blue, red).
+set_cell(Board, Row-Col, Value, NewBoard) :-
+    nth1(Row, Board, BoardRow),
+    replace(BoardRow, Col, Value, NewRow),
+    replace(Board, Row, NewRow, NewBoard).
+replace([_|T], 1, X, [X|T]).
+replace([H|T], I, X, [H|R]) :-
+    I > 1,
+    I1 is I - 1,
+    replace(T, I1, X, R).
+
+
+main_loop(GameMode,Board-CurPlayer) :-
+    get_move(CurPlayer, StartRow-StartCol, EndRow-EndCol),
+    write('Got move'),nl,
+    write(StartRow),write('-'),write(StartCol),write('-'),write(EndRow),write('-'),write(EndCol),nl,
+    valid_move(Board-CurPlayer ,StartRow-StartCol, EndRow-EndCol),
+    move(Board-CurPlayer, StartRow-StartCol, EndRow-EndCol, NewBoard-NewCurPlayer),
+    write('Valid move'),nl,
+    print_board(NewBoard),
+    main_loop(GameMode,NewBoard-NewCurPlayer).
 play :-
-    draw_initial_menu(X),
+    draw_initial_menu(GameMode),
     get_board_size(Size),
-    initial_state(Size-X,Board-State),
-    print_board(Board).
+    initial_state(Size-GameMode,Board-CurPlayer),
+    print_board(Board),
+    main_loop(GameMode,Board-CurPlayer).
     
 
-% consult('game.pl').
