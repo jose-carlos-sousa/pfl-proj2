@@ -58,8 +58,44 @@ init_board_cell(X,Y, empty,Size).
 initial_state(Size-GameMode,Board-0) :-
     init_board(Size,Board).
     
+read_number(X) :-
+    catch(read_digits(0, X), error(invalid_input, _), fail).
+
+read_digits(A, A) :-
+    peek_code(10),
+    get_code(10), !.
+
+read_digits(A, X) :-
+    peek_code(Code),
+    Code \= 10,
+    get_code(Code),
+    (   digit_value(Code, Digit)
+    ->  A1 is A * 10 + Digit,
+        read_digits(A1, X)
+    ;   throw(error(invalid_input, Code))
+    ).
+
+digit_value(Code, Digit) :-
+    Digit is Code - 48,
+    Digit >= 0,
+    Digit =< 9.
+
+get_board_size(Size) :-
+    repeat,
+    write('Please select the board size (must be an even number larger than 2): '),
+    (   read_number(Value) ->
+        (   Value > 2, Value mod 2 =:= 0 ->
+            Size = Value, !;
+            write('Invalid input. Try again.'), nl, fail
+        );
+        write('Invalid input. Try again.'), nl, skip_line, fail
+    ).
+
 play :-
     draw_initial_menu(X),
-    initial_state(6-X,Board-State),
+    get_board_size(Size),
+    initial_state(Size-X,Board-State),
     print_board(Board).
     
+
+% consult('game.pl').
