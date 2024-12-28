@@ -105,7 +105,7 @@ move(GameState-Player, C1-L1-C2-L2, NewGameState):-
     NewGameState = TempGameState3.
 
 move(GameState-Player, _, GameState):-
-    nl, write('Invalid move'), nl.
+    nl, write('Invalid move'), nl,fail.
 
 next_player(player1, player2).
 next_player(player2, player1).
