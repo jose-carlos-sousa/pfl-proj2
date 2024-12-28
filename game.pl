@@ -6,9 +6,20 @@ initial_state(GameState-player1):-
     initial_board(Board),
     GameState = Board.
 initial_board(Board):-
-    write('Enter board size:'),nl,
+    write('Enter board size (even number greater than 2):'), nl,
     read(Size),
-    init_board(Size, Board).
+    validate_size(Size, ValidSize),
+    init_board(ValidSize, Board).
+
+validate_size(Size, ValidSize) :-
+    (   integer(Size),
+        Size > 2,
+        Size mod 2 =:= 0
+    ->  ValidSize = Size
+    ;   write('Invalid input. Please enter an even number greater than 2.'), nl,
+        read(NewSize),
+        validate_size(NewSize, ValidSize)
+    ).
 
 init_board(Size, Board) :-
     init_board(Size, 1, [], Board). 
