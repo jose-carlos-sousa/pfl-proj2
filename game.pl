@@ -7,7 +7,7 @@ initial_state(GameState-player1):-
     GameState = Board.
 initial_board(Board):-
     write('Enter board size (even number greater than 2):'), nl,
-    read(Size),
+    catch(read(Size), _, (write('Read error. try again.'), nl, initial_board(Board))),
     validate_size(Size, ValidSize),
     init_board(ValidSize, Board).
 
@@ -282,7 +282,7 @@ choose_move(GameState, player2, Move):-
 
 get_move(Move):-
     write('Enter move (x1-y1-x2-y2): '), nl,
-    read(InputMove),
+    catch(read(InputMove), _, (nl, write('Read error. Try again.'), nl, fail)),
     validate_move_format(InputMove, ValidMove),
     Move = ValidMove.
 
