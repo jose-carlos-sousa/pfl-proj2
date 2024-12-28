@@ -2,24 +2,30 @@
 :- use_module(library(random)).
 
 :- consult('interface.pl').
+
 initial_state(GameState-player1):-
     initial_board(Board),
     GameState = Board.
+
 initial_board(Board):-
-    write('Enter board size (even number greater than 2):'), nl,
-    catch(read(Size), _, (write('Read error. try again.'), nl, initial_board(Board))),
-    validate_size(Size, ValidSize),
+    get_board_size(ValidSize),
     init_board(ValidSize, Board).
 
+get_board_size(ValidSize):-
+    write('Enter board size (even number greater than 2):'), nl,
+    catch(read(Size), _, (write('Read error. This may cause the next reads to fail.'), nl, get_board_size(Size))),
+    validate_size(Size, ValidSize).
+
 validate_size(Size, ValidSize) :-
-    (   integer(Size),
-        Size > 2,
-        Size mod 2 =:= 0
-    ->  ValidSize = Size
-    ;   write('Invalid input. Please enter an even number greater than 2.'), nl,
-        read(NewSize),
-        validate_size(NewSize, ValidSize)
-    ).
+    integer(Size),
+    Size > 2,
+    Size mod 2 =:= 0,
+    !,
+    ValidSize = Size.
+
+validate_size(_, ValidSize) :-
+    write('Invalid input.'), nl,
+    get_board_size(ValidSize).
 
 init_board(Size, Board) :-
     init_board(Size, 1, [], Board). 
@@ -90,16 +96,16 @@ game_cycle(GameState-Player):-
 
 % basicamente vemos se o move é válido e se vamos buscar a peça , metemos uma preta no sitio dela, e depois metemos a peça no sitio de destino
 move(GameState-Player, C1-L1-C2-L2, NewGameState):-
-    (   check_move(GameState-Player, C1-L1-C2-L2)
-    ->  get_piece(GameState, C1-L1, Piece),
-        set_piece(GameState, C1-L1, black, TempGameState),
-        set_piece(TempGameState, C2-L2, Piece, TempGameState2),
-        remove_blocked_stones(TempGameState2, TempGameState3),
-        NewGameState = TempGameState3
-    ;   nl, write('Invalid move'), nl,
-        NewGameState = GameState
-    ).
+    check_move(GameState-Player, C1-L1-C2-L2),
+    !,
+    get_piece(GameState, C1-L1, Piece),
+    set_piece(GameState, C1-L1, black, TempGameState),
+    set_piece(TempGameState, C2-L2, Piece, TempGameState2),
+    remove_blocked_stones(TempGameState2, TempGameState3),
+    NewGameState = TempGameState3.
 
+move(GameState-Player, _, GameState):-
+    nl, write('Invalid move'), nl.
 
 next_player(player1, player2).
 next_player(player2, player1).
@@ -282,16 +288,18 @@ choose_move(GameState, player2, Move):-
 
 get_move(Move):-
     write('Enter move (x1-y1-x2-y2): '), nl,
-    catch(read(InputMove), _, (nl, write('Read error. Try again.'), nl, fail)),
+    catch(read(InputMove), _, (nl, write('Read error. This may cause the next reads to fail.'), nl, fail)),
     validate_move_format(InputMove, ValidMove),
     Move = ValidMove.
 
 validate_move_format(Move, ValidMove) :-
-    (   is_valid_format(Move)
-    ->  ValidMove = Move
-    ;   write('Invalid move format. Please enter move in format x1-y1-x2-y2.'), nl,
-        get_move(ValidMove)
-    ).
+    is_valid_format(Move),
+    !,
+    ValidMove = Move.
+
+validate_move_format(_, ValidMove) :-
+    write('Invalid move format. Please enter move in format x1-y1-x2-y2.'), nl,
+    get_move(ValidMove).
 
 is_valid_format(X1-Y1-X2-Y2) :-
     integer(X1), integer(Y1), integer(X2), integer(Y2).
@@ -306,6 +314,7 @@ move(GameState, Move, NewState):-
 % A move is c1-l1-c2-l2
 choose_move(1, _GameState, Moves, Move):-
     random_select(Move, Moves, _Rest).
+
 choose_move(2, GameState, Moves, Move):-
     setof(Value-Mv, NewState^( member(Mv, Moves),
     move(GameState, Mv, NewState),
