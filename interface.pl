@@ -3,7 +3,7 @@ display_game(GameState-Player):-
     display_board(GameState).
 
 display_player(Player):-
-    write('Player: '), write(Player), nl.
+    nl, write('Player: '), write(Player), nl.
 
 
 display_board(Board) :-
