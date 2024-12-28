@@ -87,14 +87,18 @@ game_cycle(GameState-Player):-
 game_cycle(GameState-Player):-
     display_game(GameState-Player),
     game_cycle(GameState-Player).
+
 % basicamente vemos se o move é válido e se vamos buscar a peça , metemos uma preta no sitio dela, e depois metemos a peça no sitio de destino
 move(GameState-Player, C1-L1-C2-L2, NewGameState):-
-    check_move(GameState-Player, C1-L1-C2-L2),
-    get_piece(GameState, C1-L1, Piece),
-    set_piece(GameState, C1-L1, black, TempGameState),
-    set_piece(TempGameState, C2-L2, Piece, TempGameState2),
-    remove_blocked_stones(TempGameState2, TempGameState3),
-    NewGameState = TempGameState3.
+    (   check_move(GameState-Player, C1-L1-C2-L2)
+    ->  get_piece(GameState, C1-L1, Piece),
+        set_piece(GameState, C1-L1, black, TempGameState),
+        set_piece(TempGameState, C2-L2, Piece, TempGameState2),
+        remove_blocked_stones(TempGameState2, TempGameState3),
+        NewGameState = TempGameState3
+    ;   nl, write('Invalid move'), nl,
+        NewGameState = GameState
+    ).
 
 
 next_player(player1, player2).
@@ -157,11 +161,11 @@ next_position(C-L, C2-L2, NextC-NextL):-
     NextL is L.
     
 
-% se o atual for empty  eu n mudo
+% se o atual for empty eu n mudo
 remove_blocked_stones_piece(GameState,C-L, GameState):-
     get_piece(GameState, C-L, empty), !.
-$ se o atual for black eu n mudo
 
+% se o atual for black eu n mudo
 remove_blocked_stones_piece(GameState,C-L, GameState):-
     get_piece(GameState, C-L, black), !.
 
@@ -171,6 +175,7 @@ remove_blocked_stones_piece( GameState,C-L, NewBoard):-
     \+ member(empty, Stones),
     set_piece(GameState, C-L, empty, NewBoard1),
     remove_all_black_neightbours(NewBoard1, C-L, NewBoard), !.
+
 % if we gucci lets just chill i mmmmmmmma fell n sei que light alivevevveveve i see forever in ur eyes she smile smileleeeenjewjbalvlqeLVKJEDAS<
 remove_blocked_stones_piece( GameState,C-L, GameState):-
     get_piece(GameState, C-L, Piece),
@@ -276,8 +281,20 @@ choose_move(GameState, player2, Move):-
     get_move(Move).
 
 get_move(Move):-
-    write('Enter move: '),nl,
-    read(Move).
+    write('Enter move (x1-y1-x2-y2): '), nl,
+    read(InputMove),
+    validate_move_format(InputMove, ValidMove),
+    Move = ValidMove.
+
+validate_move_format(Move, ValidMove) :-
+    (   is_valid_format(Move)
+    ->  ValidMove = Move
+    ;   write('Invalid move format. Please enter move in format x1-y1-x2-y2.'), nl,
+        get_move(ValidMove)
+    ).
+
+is_valid_format(X1-Y1-X2-Y2) :-
+    integer(X1), integer(Y1), integer(X2), integer(Y2).
 
 choose_move(GameState, computer-Level, Move):-
     valid_moves(GameState, ValidMoves),
