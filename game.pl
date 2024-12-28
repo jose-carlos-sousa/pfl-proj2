@@ -141,13 +141,14 @@ adjacent(C-L, C2-L2):-
 remove_blocked_stones([H|T], NewGameState):-
     length(H, NumCols),
     length([H|T], NumRows),
-    remove_blocked_stones_helper(1-1, NumCols-NumRows, [H|T], NewGameState) , !.
-remove_blocked_stones_helper(C-L, C-L, GameState, NewGameState):- 
-    remove_blocked_stones_piece(GameState, C-L, NewGameState).
-remove_blocked_stones_helper(C-L, C2-L2, GameState, NewGameState):-
-    remove_blocked_stones_piece(GameState, C-L, TempGameState),
+    remove_blocked_stones_helper(1-1, NumCols-NumRows, [H|T],[H|T], NewGameState) , !.
+% has original board board accumulator and final 
+remove_blocked_stones_helper(C-L, C-L, GameState,GameStateAcc, NewGameState):- 
+    remove_blocked_stones_piece(GameState,GameStateAcc, C-L, NewGameState).
+remove_blocked_stones_helper(C-L, C2-L2, GameState,GameStateAcc, NextGameState):-
+    remove_blocked_stones_piece(GameState,GameStateAcc, C-L, NewGameState),
     next_position(C-L, C2-L2, NextC-NextL),
-    remove_blocked_stones_helper(NextC-NextL, C2-L2, TempGameState, NewGameState).
+    remove_blocked_stones_helper(NextC-NextL, C2-L2,GameState ,NewGameState, NextGameState).
 
 next_position(C-L, C-L2, NextC-NextL):-
     NextL is L + 1,
@@ -158,21 +159,21 @@ next_position(C-L, C2-L2, NextC-NextL):-
     
 
 % se o atual for empty  eu n mudo
-remove_blocked_stones_piece(GameState,C-L, GameState):-
+remove_blocked_stones_piece(GameState,GameAcc,C-L, GameAcc):-
     get_piece(GameState, C-L, empty), !.
 $ se o atual for black eu n mudo
 
-remove_blocked_stones_piece(GameState,C-L, GameState):-
+remove_blocked_stones_piece(GameState,GameAcc,C-L, GameAcc):-
     get_piece(GameState, C-L, black), !.
 
-remove_blocked_stones_piece( GameState,C-L, NewBoard):-
+remove_blocked_stones_piece( GameState,GameAcc,C-L, NewGameState ):-
     get_piece(GameState, C-L, Piece),
     adjacent_stones(GameState, C-L, Stones),
     \+ member(empty, Stones),
-    set_piece(GameState, C-L, empty, NewBoard1),
-    remove_all_black_neightbours(NewBoard1, C-L, NewBoard), !.
+    set_piece(GameAcc, C-L, empty, NewBoard1),
+    remove_all_black_neightbours(NewBoard1, C-L, NewGameState), !.
 % if we gucci lets just chill i mmmmmmmma fell n sei que light alivevevveveve i see forever in ur eyes she smile smileleeeenjewjbalvlqeLVKJEDAS<
-remove_blocked_stones_piece( GameState,C-L, GameState):-
+remove_blocked_stones_piece( GameState,GameAcc,C-L, GameAcc):-
     get_piece(GameState, C-L, Piece),
     adjacent_stones(GameState, C-L, Stones),
     member(empty, Stones) , !.
