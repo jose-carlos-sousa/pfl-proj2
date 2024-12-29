@@ -93,11 +93,23 @@ validate_mode(Mode, GameMode) :-
     !,
     GameMode = Mode.
 
+get_AI_level(Level):-
+    write('Choose AI level:'), nl,
+    write('1. Random'), nl,
+    write('2. Greedy'), nl,
+    catch(read(AI), _, (write('Read error. This may cause the next reads to fail.'), nl, get_AI_level(AI))),
+    validate_AI(AI, Level).
+validate_AI(AI, Level) :-
+    member(AI, [1, 2]),
+    !,
+    Level = AI.
 play:-
     get_game_mode(GameMode),
     write('Game mode: '), write(GameMode), nl,
     get_board_size(Size),
     write('Board size: '), write(Size), nl,
+    get_AI_level(Level),
+    write('AI level: '), write(Level), nl,
     initial_state(GameMode-Size,GameState-Player),
     display_game(GameState-Player),
     game_cycle(GameState-Player).
