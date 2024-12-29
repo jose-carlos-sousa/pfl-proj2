@@ -371,23 +371,23 @@ choose_move(GameState-computer1,1, Move) :-
     valid_moves(GameState-computer1, Moves),
     random_select(Move, Moves, _Rest),
     inverse_transform_move(Move, TransformedMove),
-    nl, write('Computer1 (random) chose move: '), write(TransformedMove), nl.
+    nl, write('Red Computer (random) chose move: '), write(TransformedMove), nl.
 
 choose_move(GameState-computer1,2, Move):-
     greedy_move(GameState, Move),
     inverse_transform_move(Move, TransformedMove),
-    nl, write('Computer1 (greedy) chose move: '), write(TransformedMove), nl.
+    nl, write('Red Computer (greedy) chose move: '), write(TransformedMove), nl.
 
 choose_move(GameState-computer2,1, Move) :-
     valid_moves(GameState-computer2, Moves),
     random_select(Move, Moves, _Rest),
     inverse_transform_move(Move, TransformedMove),
-    nl, write('Computer2 (random) chose move: '), write(TransformedMove), nl.
+    nl, write('Blue Computer (random) chose move: '), write(TransformedMove), nl.
 
 choose_move(GameState-computer2,2, Move):-
     greedy_move(GameState, Move),
     inverse_transform_move(Move, TransformedMove),
-    nl, write('Computer2 (greedy) chose move: '), write(TransformedMove), nl.
+    nl, write('Blue Computer (greedy) chose move: '), write(TransformedMove), nl.
 
 inverse_transform_move(StartColNum-StartRowNum-EndColNum-EndRowNum, Start-End) :-
     num_to_col(StartColNum, StartCol),
@@ -405,7 +405,7 @@ num_to_col(Num, Col) :-
 
 
 get_move(Move) :-
-    write('Enter move (e.g., b1-c3): '), nl,
+    nl, write('Enter move (e.g., b1-c3): '), nl,
     catch(read(InputMove), _, (nl, write('Read error. This may cause the next reads to fail.'), nl, fail)),
     validate_move_format(InputMove),
     transform_move(InputMove, TransformedMove),

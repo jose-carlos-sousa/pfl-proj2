@@ -3,7 +3,24 @@ display_game(GameState-Player):-
     display_board(GameState).
 
 display_player(Player):-
-    nl, write('Player: '), write(Player), nl.
+    nl, write('Player: '),
+    display_colored_player(Player),
+    nl.
+
+display_colored_player(player1) :-
+    write('\e[31mRed Player'), 
+    write('\e[0m'), nl.
+display_colored_player(player2) :-
+    write('\e[34mBlue Player'), 
+    write('\e[0m'), nl.  
+display_colored_player(computer1) :-
+    write('\e[31mRed Computer'), 
+    write('\e[0m'), nl.  
+display_colored_player(computer2) :-
+    write('\e[34mBlue Computer'), 
+    write('\e[0m'), nl.  
+display_colored_player(Player) :-
+    write(Player), nl.
 
 
 display_board(Board) :-
