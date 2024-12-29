@@ -1,15 +1,20 @@
 :- use_module(library(lists)).
 :- use_module(library(random)).
+:- use_module(library(between)).
 
 :- consult('interface.pl').
 
-initial_state(GameState-player1):-
-    initial_board(Board),
-    GameState = Board.
+initial_state(GameMode-Size, Board-Player):-
+    initial_board(Size,Board),
+    initial_player(GameMode, Player).
 
-initial_board(Board):-
-    get_board_size(ValidSize),
-    init_board(ValidSize, Board).
+initial_player(1, player1).
+initial_player(2, player1).
+initial_player(3, computer1).
+initial_player(4, computer1).
+
+initial_board(Size,Board):-
+    init_board(Size, Board).
 
 get_board_size(ValidSize):-
     write('Enter board size (even number greater than 2):'), nl,
@@ -75,24 +80,76 @@ init_board_cell(X,Size, blue,Size) :-
 
 init_board_cell(X,Y, empty,Size).
 
-play_game:-
-    initial_state(GameState-Player),
-    display_game(GameState-Player),
-    game_cycle(GameState-Player).
+get_game_mode(GameMode):-
+    write('Choose game mode:'), nl,
+    write('1. Player vs Player'), nl,
+    write('2. Player vs Computer'), nl,
+    write('3. Computer vs Player'), nl,
+    write('4. Computer vs Computer'), nl,
+    catch(read(Mode), _, (write('Read error. This may cause the next reads to fail.'), nl, get_game_mode(Mode))),
+    validate_mode(Mode, GameMode).
 
-game_cycle(GameState-Player):-
+validate_mode(Mode, GameMode) :-
+    member(Mode, [1, 2, 3, 4]),
+    !,
+    GameMode = Mode.
+
+get_AI_level(Level):-
+    write('Choose AI level:'), nl,
+    write('1. Random'), nl,
+    write('2. Greedy'), nl,
+    catch(read(AI), _, (write('Read error. This may cause the next reads to fail.'), nl, get_AI_level(AI))),
+    validate_AI(AI, Level).
+validate_AI(AI, Level) :-
+    member(AI, [1, 2]),
+    !,
+    Level = AI.
+
+play:-
+    get_game_mode(GameMode),
+    get_board_size(Size),
+    play(GameMode, Size).
+
+% pessoas reais
+play(1, Size):-
+    initial_state(1-Size, GameState-Player),
+    display_game(GameState-Player),
+    game_cycle(GameState-Player, _, 1).
+
+% computador vai em segundo
+play(2, Size):-
+    get_AI_level(Level),
+    initial_state(2-Size, GameState-Player),
+    display_game(GameState-Player),
+    game_cycle(GameState-Player, Level, 2).
+
+% computador vai em primeiro
+play(3, Size):-
+    get_AI_level(Level),
+    initial_state(3-Size, GameState-Player),
+    display_game(GameState-Player),
+    game_cycle(GameState-Player, Level, 3).
+
+% trabalhar nesta opção depois
+play(4, Size):-
+    get_AI_level(Level),
+    initial_state(4-Size, GameState-Player),
+    display_game(GameState-Player),
+    game_cycle(GameState-Player, Level, 4).
+
+game_cycle(GameState-Player,Level,GameMode):-
     game_over(GameState, Winner), !,
     congratulate(Winner).
-game_cycle(GameState-Player):-
-    choose_move(GameState, Player, Move),
+game_cycle(GameState-Player,Level,GameMode):-
+    choose_move(GameState-Player,Level, Move),
     move(GameState-Player, Move, NewGameState),
-    next_player(Player, NextPlayer), % could be done in move/3
+    next_player(GameMode, Player, NextPlayer), % could be done in move/3
     display_game(NewGameState-NextPlayer),
-    game_cycle(NewGameState-NextPlayer).
+    game_cycle(NewGameState-NextPlayer,Level,GameMode).
 
-game_cycle(GameState-Player):-
+game_cycle(GameState-Player,Level,GameMode):-
     display_game(GameState-Player),
-    game_cycle(GameState-Player).
+    game_cycle(GameState-Player,Level,GameMode).
 
 % basicamente vemos se o move é válido e se vamos buscar a peça , metemos uma preta no sitio dela, e depois metemos a peça no sitio de destino
 move(GameState-Player, C1-L1-C2-L2, NewGameState):-
@@ -104,11 +161,17 @@ move(GameState-Player, C1-L1-C2-L2, NewGameState):-
     remove_blocked_stones(TempGameState2, TempGameState3),
     NewGameState = TempGameState3.
 
-move(GameState-Player, _, GameState):-
-    nl, write('Invalid move'), nl,fail.
+move(GameState-Player, _, GameState):- fail.
 
-next_player(player1, player2).
-next_player(player2, player1).
+next_player(1,player1, player2).
+next_player(1,player2, player1).
+next_player(2,player1, computer2).
+next_player(2,computer2, player1).
+next_player(3,computer1, player2).
+next_player(3,player2, computer1).
+next_player(4,computer1, computer2).
+next_player(4,computer2, computer1).
+
 check_move(GameState-Player, Move):-
     player_has_piece(GameState-Player, Move),
     valid_queen_move(GameState, Move),
@@ -247,7 +310,9 @@ get_piece(GameState, C-L, Piece):-
     nth1(L, GameState, Row),
     nth1(C, Row, Piece).
 player_piece(red, player1).
+player_piece(red, computer1).
 player_piece(blue, player2).
+player_piece(blue, computer2).
 game_over(GameState, Winner):-
     there_are_blue_left(GameState), 
     there_are_red_left(GameState),
@@ -280,10 +345,44 @@ there_are_red_left([CurRow|OtherRows]):-
 
 
 % interaction to select move
-choose_move(GameState, player1, Move):-
+choose_move(GameState-player1,Level, Move):-
     get_move(Move).
-choose_move(GameState, player2, Move):-
+choose_move(GameState-player2,Level, Move):-
     get_move(Move).
+
+valid_moves(GameState-Player, Moves) :-
+    findall(Move, (
+        within_range(Move,GameState),
+        move(GameState-Player, Move, NewState)  % No trailing comma here!
+    ), Moves).
+
+within_range(Move,GameState) :-
+    length(GameState, Size),
+    Size1 is Size + 1,
+    between(1, Size1, FromX),
+    between(1, Size1, FromY),
+    between(1, Size1, ToX),
+    between(1, Size1, ToY),
+    Move = FromX-FromY-ToX-ToY.
+    
+
+
+choose_move(GameState-computer1,1, Move) :-
+    valid_moves(GameState-computer1, Moves),
+    random_select(Move, Moves, _Rest),
+    nl, write('Computer1 (random) chose move: '), write(Move), nl.
+choose_move(GameState-computer1,2, Move):-
+    greedy_move(GameState, Move),
+    nl, write('Computer1 (greedy) chose move: '), write(Move), nl.
+choose_move(GameState-computer2,1, Move) :-
+    valid_moves(GameState-computer2, Moves),
+    random_select(Move, Moves, _Rest),
+    nl, write('Computer2 (random) chose move: '), write(Move), nl.
+choose_move(GameState-computer2,2, Move):-
+    greedy_move(GameState, Move),
+    nl, write('Computer2 (greedy) chose move: '), write(Move), nl.
+
+
 
 get_move(Move):-
     write('Enter move (x1-y1-x2-y2): '), nl,
@@ -303,18 +402,3 @@ validate_move_format(_, ValidMove) :-
 is_valid_format(X1-Y1-X2-Y2) :-
     integer(X1), integer(Y1), integer(X2), integer(Y2).
 
-choose_move(GameState, computer-Level, Move):-
-    valid_moves(GameState, ValidMoves),
-    choose_move(Level, GameState, ValidMoves, Move).
-valid_moves(GameState, Moves):-
-    findall(Move, move(GameState, Move, NewState), Moves).
-move(GameState, Move, NewState):-
-    
-% A move is c1-l1-c2-l2
-choose_move(1, _GameState, Moves, Move):-
-    random_select(Move, Moves, _Rest).
-
-choose_move(2, GameState, Moves, Move):-
-    setof(Value-Mv, NewState^( member(Mv, Moves),
-    move(GameState, Mv, NewState),
-    evaluate_board(NewState, Value) ), [_V-Move|_]).
