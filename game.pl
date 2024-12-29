@@ -370,35 +370,70 @@ within_range(Move,GameState) :-
 choose_move(GameState-computer1,1, Move) :-
     valid_moves(GameState-computer1, Moves),
     random_select(Move, Moves, _Rest),
-    nl, write('Computer1 (random) chose move: '), write(Move), nl.
+    inverse_transform_move(Move, TransformedMove),
+    nl, write('Computer1 (random) chose move: '), write(TransformedMove), nl.
+
 choose_move(GameState-computer1,2, Move):-
     greedy_move(GameState, Move),
-    nl, write('Computer1 (greedy) chose move: '), write(Move), nl.
+    inverse_transform_move(Move, TransformedMove),
+    nl, write('Computer1 (greedy) chose move: '), write(TransformedMove), nl.
+
 choose_move(GameState-computer2,1, Move) :-
     valid_moves(GameState-computer2, Moves),
     random_select(Move, Moves, _Rest),
-    nl, write('Computer2 (random) chose move: '), write(Move), nl.
+    inverse_transform_move(Move, TransformedMove),
+    nl, write('Computer2 (random) chose move: '), write(TransformedMove), nl.
+
 choose_move(GameState-computer2,2, Move):-
     greedy_move(GameState, Move),
-    nl, write('Computer2 (greedy) chose move: '), write(Move), nl.
+    inverse_transform_move(Move, TransformedMove),
+    nl, write('Computer2 (greedy) chose move: '), write(TransformedMove), nl.
+
+inverse_transform_move(StartColNum-StartRowNum-EndColNum-EndRowNum, Start-End) :-
+    num_to_col(StartColNum, StartCol),
+    num_to_col(EndColNum, EndCol),
+    number_codes(StartRowNum, [StartRowCode]),
+    number_codes(EndRowNum, [EndRowCode]),
+    char_code(StartRowChar, StartRowCode),
+    char_code(EndRowChar, EndRowCode),
+    atom_chars(Start, [StartCol, StartRowChar]),
+    atom_chars(End, [EndCol, EndRowChar]).
+
+num_to_col(Num, Col) :-
+    Code is Num + 96, % 1 -> 'a'
+    char_code(Col, Code).
 
 
-
-get_move(Move):-
-    write('Enter move (x1-y1-x2-y2): '), nl,
+get_move(Move) :-
+    write('Enter move (e.g., b1-c3): '), nl,
     catch(read(InputMove), _, (nl, write('Read error. This may cause the next reads to fail.'), nl, fail)),
-    validate_move_format(InputMove, ValidMove),
-    Move = ValidMove.
+    validate_move_format(InputMove),
+    transform_move(InputMove, TransformedMove),
+    Move = TransformedMove.
 
-validate_move_format(Move, ValidMove) :-
-    is_valid_format(Move),
-    !,
-    ValidMove = Move.
+validate_move_format(Start-End) :-
+    atom_chars(Start, StartChars), % Posição inicial
+    atom_chars(End, EndChars),     % Posição final
+    validate_position_format(StartChars),
+    validate_position_format(EndChars).
 
-validate_move_format(_, ValidMove) :-
-    write('Invalid move format. Please enter move in format x1-y1-x2-y2.'), nl,
-    get_move(ValidMove).
+validate_position_format([Col|RowChars]) :-
+    char_code(Col, ColCode),
+    ColCode >= 97, ColCode =< 122, % coluna é uma letra
+    maplist(char_code, RowChars, RowCodes),
+    maplist(between(48, 57), RowCodes). % linha é um número
 
-is_valid_format(X1-Y1-X2-Y2) :-
-    integer(X1), integer(Y1), integer(X2), integer(Y2).
+transform_move(Start-End, StartColNum-StartRowNum-EndColNum-EndRowNum) :-
+    atom_chars(Start, [StartCol|StartRowChars]), % Separar coluna e linha
+    atom_chars(End, [EndCol|EndRowChars]),       % Separar coluna e linha
+    col_to_num(StartCol, StartColNum),
+    col_to_num(EndCol, EndColNum),
+    maplist(char_code, StartRowChars, StartRowCodes),
+    maplist(char_code, EndRowChars, EndRowCodes),
+    number_codes(StartRowNum, StartRowCodes), % Converter string para número
+    number_codes(EndRowNum, EndRowCodes).     % Converter string para número
+
+col_to_num(Col, Num) :-
+    char_code(Col, Code),
+    Num is Code - 96. % 'a' -> 1
 

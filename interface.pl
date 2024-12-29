@@ -14,13 +14,14 @@ display_board(Board) :-
 
 display_column_labels(Size) :-
     write('   '), % Spacing for row labels
-    display_columns(1, Size),
+    display_columns(0, Size),
     nl.
 
 
 display_columns(Col, Size) :-
-    Col =< Size,
-    format('~w  ', [Col]),
+    Col < Size,
+    Letter is Col + 97, % ASCII value for 'a' is 97
+    format('~c  ', [Letter]),
     NextCol is Col + 1,
     display_columns(NextCol, Size).
 display_columns(_, _).
