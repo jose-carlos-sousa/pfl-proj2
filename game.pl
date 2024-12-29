@@ -3,13 +3,17 @@
 
 :- consult('interface.pl').
 
-initial_state(GameState-player1):-
-    initial_board(Board),
-    GameState = Board.
+initial_state(GameMode-Size, Board-Player):-
+    initial_board(Size,Board),
+    initial_player(GameMode, Player).
 
-initial_board(Board):-
-    get_board_size(ValidSize),
-    init_board(ValidSize, Board).
+initial_player(1, player1).
+initial_player(2, player1).
+initial_player(3, computer1).
+initial_player(4, computer1).
+
+initial_board(Size,Board):-
+    init_board(Size, Board).
 
 get_board_size(ValidSize):-
     write('Enter board size (even number greater than 2):'), nl,
@@ -75,8 +79,26 @@ init_board_cell(X,Size, blue,Size) :-
 
 init_board_cell(X,Y, empty,Size).
 
-play_game:-
-    initial_state(GameState-Player),
+get_game_mode(GameMode):-
+    write('Choose game mode:'), nl,
+    write('1. Player vs Player'), nl,
+    write('2. Player vs Computer'), nl,
+    write('3. Computer vs Player'), nl,
+    write('4. Computer vs Computer'), nl,
+    catch(read(Mode), _, (write('Read error. This may cause the next reads to fail.'), nl, get_game_mode(Mode))),
+    validate_mode(Mode, GameMode).
+
+validate_mode(Mode, GameMode) :-
+    member(Mode, [1, 2, 3, 4]),
+    !,
+    GameMode = Mode.
+
+play:-
+    get_game_mode(GameMode),
+    write('Game mode: '), write(GameMode), nl,
+    get_board_size(Size),
+    write('Board size: '), write(Size), nl,
+    initial_state(GameMode-Size,GameState-Player),
     display_game(GameState-Player),
     game_cycle(GameState-Player).
 
