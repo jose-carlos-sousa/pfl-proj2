@@ -105,26 +105,23 @@ validate_AI(AI, Level) :-
     Level = AI.
 play:-
     get_game_mode(GameMode),
-    write('Game mode: '), write(GameMode), nl,
     get_board_size(Size),
-    write('Board size: '), write(Size), nl,
     get_AI_level(Level),
-    write('AI level: '), write(Level), nl,
     initial_state(GameMode-Size,GameState-Player),
     display_game(GameState-Player),
-    game_cycle(GameState-Player).
+    game_cycle(GameState-Player, Level,GameMode).
 
-game_cycle(GameState-Player):-
+game_cycle(GameState-Player,Level,GameMode):-
     game_over(GameState, Winner), !,
     congratulate(Winner).
-game_cycle(GameState-Player):-
-    choose_move(GameState, Player, Move),
+game_cycle(GameState-Player,Level,GameMode):-
+    choose_move(GameState-Player,Level, Move),
     move(GameState-Player, Move, NewGameState),
-    next_player(Player, NextPlayer), % could be done in move/3
+    next_player(GameMode, Player, NextPlayer), % could be done in move/3
     display_game(NewGameState-NextPlayer),
-    game_cycle(NewGameState-NextPlayer).
+    game_cycle(NewGameState-NextPlayer,Level,GameMode).
 
-game_cycle(GameState-Player):-
+game_cycle(GameState-Player,Level,GameMode):-
     display_game(GameState-Player),
     game_cycle(GameState-Player).
 
@@ -141,8 +138,14 @@ move(GameState-Player, C1-L1-C2-L2, NewGameState):-
 move(GameState-Player, _, GameState):-
     nl, write('Invalid move'), nl,fail.
 
-next_player(player1, player2).
-next_player(player2, player1).
+next_player(1,player1, player2).
+next_player(1,player2, player1).
+next_player(2,player1, computer2).
+next_player(2,computer2, player1).
+next_player(3,computer2, player1).
+next_player(3,player1, computer2).
+next_player(4,computer1, computer2).
+
 check_move(GameState-Player, Move):-
     player_has_piece(GameState-Player, Move),
     valid_queen_move(GameState, Move),
@@ -281,7 +284,9 @@ get_piece(GameState, C-L, Piece):-
     nth1(L, GameState, Row),
     nth1(C, Row, Piece).
 player_piece(red, player1).
+player_piece(red, computer1).
 player_piece(blue, player2).
+player_piece(blue, computer2).
 game_over(GameState, Winner):-
     there_are_blue_left(GameState), 
     there_are_red_left(GameState),
@@ -314,10 +319,22 @@ there_are_red_left([CurRow|OtherRows]):-
 
 
 % interaction to select move
-choose_move(GameState, player1, Move):-
+choose_move(GameState-player1,Level, Move):-
     get_move(Move).
-choose_move(GameState, player2, Move):-
+choose_move(GameState-player2,Level, Move):-
     get_move(Move).
+
+valid_moves(GameState-Player, Moves):-
+    findall(Move, move(GameState-Player, Move, NewState), Moves).
+
+choose_move(GameState-computer1,1, Move). % vais tu fazer oh mendes MUAHHAHAHAHA
+choose_move(GameState-computer1,2, Move):-
+    greedy_move(GameState, Move).
+choose_move(GameState-computer2,1, Move). % vais tu fazer oh mendes MUAHHAHAHAHA
+choose_move(GameState-computer2,2, Move):-
+    greedy_move(GameState, Move).
+
+
 
 get_move(Move):-
     write('Enter move (x1-y1-x2-y2): '), nl,
@@ -337,18 +354,3 @@ validate_move_format(_, ValidMove) :-
 is_valid_format(X1-Y1-X2-Y2) :-
     integer(X1), integer(Y1), integer(X2), integer(Y2).
 
-choose_move(GameState, computer-Level, Move):-
-    valid_moves(GameState, ValidMoves),
-    choose_move(Level, GameState, ValidMoves, Move).
-valid_moves(GameState, Moves):-
-    findall(Move, move(GameState, Move, NewState), Moves).
-move(GameState, Move, NewState):-
-    
-% A move is c1-l1-c2-l2
-choose_move(1, _GameState, Moves, Move):-
-    random_select(Move, Moves, _Rest).
-
-choose_move(2, GameState, Moves, Move):-
-    setof(Value-Mv, NewState^( member(Mv, Moves),
-    move(GameState, Mv, NewState),
-    evaluate_board(NewState, Value) ), [_V-Move|_]).
