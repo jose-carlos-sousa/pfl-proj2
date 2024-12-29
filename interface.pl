@@ -74,13 +74,12 @@ display_cell(black) :-
     write('\e[0m'),   
     write(' ').
 
+congratulate(red) :-
+    nl,
+    write('\e[31mCongratulations, Red!'),
+    write('\e[0m'), nl, nl.
 
-congratulate(Winner) :-
-    Winner = 'draw',
-    write('The game is a draw!'), nl.
-congratulate(Winner) :-
-    write('Congratulations, '), write(Winner), write('!'), nl.
-
-
-
-
+congratulate(blue) :-
+    nl,
+    write('\e[34mCongratulations, Blue!'),
+    write('\e[0m'), nl, nl.

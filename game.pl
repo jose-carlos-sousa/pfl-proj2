@@ -138,7 +138,7 @@ play(4, Size):-
     game_cycle(GameState-Player, Level, 4).
 
 game_cycle(GameState-Player,Level,GameMode):-
-    game_over(GameState, Winner), !,
+    game_over(GameState-Player, Winner), !,
     congratulate(Winner).
 game_cycle(GameState-Player,Level,GameMode):-
     choose_move(GameState-Player,Level, Move),
@@ -313,22 +313,33 @@ player_piece(red, player1).
 player_piece(red, computer1).
 player_piece(blue, player2).
 player_piece(blue, computer2).
-game_over(GameState, Winner):-
-    there_are_blue_left(GameState), 
+
+game_over(GameState-Player, Winner):-
+    there_are_blue_left(GameState),
     there_are_red_left(GameState),
     fail.
-game_over(GameState, Winner):-
+
+game_over(GameState-Player, Winner):-
     there_are_blue_left(GameState), 
     \+ there_are_red_left(GameState),
     Winner = blue.
-game_over(GameState, Winner):-
+
+game_over(GameState-Player, Winner):-
     there_are_red_left(GameState), 
     \+ there_are_blue_left(GameState),
     Winner = red.
-game_over(GameState, Winner):-
+
+game_over(GameState-Player, Winner):-
     \+ there_are_red_left(GameState), 
     \+ there_are_blue_left(GameState),
-    Winner = draw.
+    get_draw_winner(Player, Winner).
+
+get_draw_winner(player1, blue).
+get_draw_winner(player2, red).
+get_draw_winner(computer1, blue).
+get_draw_winner(computer2, red).
+
+
 there_are_blue_left([]):- fail.
 there_are_blue_left([CurRow|OtherRows]):-
     member(blue, CurRow), !.
