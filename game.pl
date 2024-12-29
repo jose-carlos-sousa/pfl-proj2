@@ -2,6 +2,7 @@
 :- use_module(library(random)).
 :- use_module(library(between)).
 
+
 :- consult('interface.pl').
 
 initial_state(GameMode-Size, Board-Player):-
@@ -350,11 +351,6 @@ choose_move(GameState-player1,Level, Move):-
 choose_move(GameState-player2,Level, Move):-
     get_move(Move).
 
-valid_moves(GameState-Player, Moves) :-
-    findall(Move, (
-        within_range(Move,GameState),
-        move(GameState-Player, Move, NewState)  % No trailing comma here!
-    ), Moves).
 
 within_range(Move,GameState) :-
     length(GameState, Size),
@@ -365,24 +361,63 @@ within_range(Move,GameState) :-
     between(1, Size1, ToY),
     Move = FromX-FromY-ToX-ToY.
     
+evaluate_board(GameState, Value, red):-
+    ratio_surrounding_color(GameState, red, NumRed),
+    ratio_surrounding_color(GameState, blue, NumBlue),
+    Value is NumRed - NumBlue.
 
+evaluate_board(GameState, Value, blue):-
+    ratio_surrounding_color(GameState, red, NumRed),
+    ratio_surrounding_color(GameState, blue, NumBlue),
+    Value is NumBlue - NumRed.
 
+ratio_surrounding_color(GameState, Color, Num):-
+    findall(Stones, (
+            get_piece(GameState, C-L, Color),
+            adjacent_stones(GameState, C-L, Stones)
+    ), StonesList),
+    findall(EmptyStone, (
+            member(Stones, StonesList),
+            member(EmptyStone, Stones),
+            EmptyStone == empty
+    ), EmptyStones),
+    findall(NonEmptyStone, (
+            member(Stones, StonesList),
+            member(NonEmptyStone, Stones),
+            NonEmptyStone \= empty
+    ), NonEmptyStones),
+    length(NonEmptyStones, NonEmptyStoneLen),
+    length(EmptyStones, EmptyStonesLen),
+    Num is NonEmptyStoneLen - EmptyStonesLen.
+
+    
 choose_move(GameState-computer1,1, Move) :-
     valid_moves(GameState-computer1, Moves),
     random_select(Move, Moves, _Rest),
     nl, write('Computer1 (random) chose move: '), write(Move), nl.
 choose_move(GameState-computer1,2, Move):-
-    greedy_move(GameState, Move),
+    valid_moves(GameState-computer1, Moves),
+    setof(Value-Mv, NewState^( member(Mv, Moves),
+        move(GameState-computer1, Mv, NewState),
+        evaluate_board(NewState, Value,red) ), [_V-Move|_]).
     nl, write('Computer1 (greedy) chose move: '), write(Move), nl.
 choose_move(GameState-computer2,1, Move) :-
     valid_moves(GameState-computer2, Moves),
     random_select(Move, Moves, _Rest),
     nl, write('Computer2 (random) chose move: '), write(Move), nl.
 choose_move(GameState-computer2,2, Move):-
-    greedy_move(GameState, Move),
+    valid_moves(GameState-computer2, Moves),
+    setof(Value-Mv, NewState^( member(Mv, Moves),
+        move(GameState-computer2, Mv, NewState),
+        evaluate_board(NewState, Value,blue) ), [_V-Move|_]),
     nl, write('Computer2 (greedy) chose move: '), write(Move), nl.
 
 
+valid_moves(GameState-Player, Moves) :-
+    findall(Move, (
+        within_range(Move,GameState),
+        move(GameState-Player, Move, NewState)  % No trailing comma here!
+    ), Moves).
 
 get_move(Move):-
     write('Enter move (x1-y1-x2-y2): '), nl,
