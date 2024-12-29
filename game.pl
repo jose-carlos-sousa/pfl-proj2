@@ -1,5 +1,6 @@
 :- use_module(library(lists)).
 :- use_module(library(random)).
+:- use_module(library(between)).
 
 :- consult('interface.pl').
 
@@ -135,8 +136,7 @@ move(GameState-Player, C1-L1-C2-L2, NewGameState):-
     remove_blocked_stones(TempGameState2, TempGameState3),
     NewGameState = TempGameState3.
 
-move(GameState-Player, _, GameState):-
-    nl, write('Invalid move'), nl,fail.
+move(GameState-Player, _, GameState):- fail.
 
 next_player(1,player1, player2).
 next_player(1,player2, player1).
@@ -324,13 +324,31 @@ choose_move(GameState-player1,Level, Move):-
 choose_move(GameState-player2,Level, Move):-
     get_move(Move).
 
-valid_moves(GameState-Player, Moves):-
-    findall(Move, move(GameState-Player, Move, NewState), Moves).
+valid_moves(GameState-Player, Moves) :-
+    findall(Move, (
+        within_range(Move,GameState),
+        move(GameState-Player, Move, NewState)  % No trailing comma here!
+    ), Moves).
 
-choose_move(GameState-computer1,1, Move). % vais tu fazer oh mendes MUAHHAHAHAHA
+within_range(Move,GameState) :-
+    length(GameState, Size),
+    Size1 is Size + 1,
+    between(1, Size1, FromX),
+    between(1, Size1, FromY),
+    between(1, Size1, ToX),
+    between(1, Size1, ToY),
+    Move = FromX-FromY-ToX-ToY.
+    
+
+
+choose_move(GameState-computer1,1, Move) :-
+    valid_moves(GameState-computer1, Moves),
+    random_select(Move, Moves, _Rest).
 choose_move(GameState-computer1,2, Move):-
     greedy_move(GameState, Move).
-choose_move(GameState-computer2,1, Move). % vais tu fazer oh mendes MUAHHAHAHAHA
+choose_move(GameState-computer2,1, Move) :-
+    valid_moves(GameState-computer2, Moves),
+    random_select(Move, Moves, _Rest).
 choose_move(GameState-computer2,2, Move):-
     greedy_move(GameState, Move).
 
