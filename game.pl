@@ -104,13 +104,38 @@ validate_AI(AI, Level) :-
     member(AI, [1, 2]),
     !,
     Level = AI.
+
 play:-
     get_game_mode(GameMode),
     get_board_size(Size),
-    get_AI_level(Level),
-    initial_state(GameMode-Size,GameState-Player),
+    play(GameMode, Size).
+
+% pessoas reais
+play(1, Size):-
+    initial_state(1-Size, GameState-Player),
     display_game(GameState-Player),
-    game_cycle(GameState-Player, Level,GameMode).
+    game_cycle(GameState-Player, _, 1).
+
+% computador vai em segundo
+play(2, Size):-
+    get_AI_level(Level),
+    initial_state(2-Size, GameState-Player),
+    display_game(GameState-Player),
+    game_cycle(GameState-Player, Level, 2).
+
+% computador vai em primeiro
+play(3, Size):-
+    get_AI_level(Level),
+    initial_state(3-Size, GameState-Player),
+    display_game(GameState-Player),
+    game_cycle(GameState-Player, Level, 3).
+
+% trabalhar nesta opção depois
+play(4, Size):-
+    get_AI_level(Level),
+    initial_state(4-Size, GameState-Player),
+    display_game(GameState-Player),
+    game_cycle(GameState-Player, Level, 4).
 
 game_cycle(GameState-Player,Level,GameMode):-
     game_over(GameState, Winner), !,
@@ -121,10 +146,6 @@ game_cycle(GameState-Player,Level,GameMode):-
     next_player(GameMode, Player, NextPlayer), % could be done in move/3
     display_game(NewGameState-NextPlayer),
     game_cycle(NewGameState-NextPlayer,Level,GameMode).
-
-game_cycle(GameState-Player,Level,GameMode):-
-    display_game(GameState-Player),
-    game_cycle(GameState-Player).
 
 % basicamente vemos se o move é válido e se vamos buscar a peça , metemos uma preta no sitio dela, e depois metemos a peça no sitio de destino
 move(GameState-Player, C1-L1-C2-L2, NewGameState):-
@@ -142,9 +163,10 @@ next_player(1,player1, player2).
 next_player(1,player2, player1).
 next_player(2,player1, computer2).
 next_player(2,computer2, player1).
-next_player(3,computer2, player1).
-next_player(3,player1, computer2).
+next_player(3,computer1, player2).
+next_player(3,player2, computer1).
 next_player(4,computer1, computer2).
+next_player(4,computer2, computer1).
 
 check_move(GameState-Player, Move):-
     player_has_piece(GameState-Player, Move),
