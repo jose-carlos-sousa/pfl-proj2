@@ -147,6 +147,10 @@ game_cycle(GameState-Player,Level,GameMode):-
     display_game(NewGameState-NextPlayer),
     game_cycle(NewGameState-NextPlayer,Level,GameMode).
 
+game_cycle(GameState-Player,Level,GameMode):-
+    display_game(GameState-Player),
+    game_cycle(GameState-Player,Level,GameMode).
+
 % basicamente vemos se o move é válido e se vamos buscar a peça , metemos uma preta no sitio dela, e depois metemos a peça no sitio de destino
 move(GameState-Player, C1-L1-C2-L2, NewGameState):-
     check_move(GameState-Player, C1-L1-C2-L2),
