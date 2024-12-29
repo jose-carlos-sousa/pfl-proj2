@@ -343,14 +343,18 @@ within_range(Move,GameState) :-
 
 choose_move(GameState-computer1,1, Move) :-
     valid_moves(GameState-computer1, Moves),
-    random_select(Move, Moves, _Rest).
+    random_select(Move, Moves, _Rest),
+    nl, write('Computer1 (random) chose move: '), write(Move), nl.
 choose_move(GameState-computer1,2, Move):-
-    greedy_move(GameState, Move).
+    greedy_move(GameState, Move),
+    nl, write('Computer1 (greedy) chose move: '), write(Move), nl.
 choose_move(GameState-computer2,1, Move) :-
     valid_moves(GameState-computer2, Moves),
-    random_select(Move, Moves, _Rest).
+    random_select(Move, Moves, _Rest),
+    nl, write('Computer2 (random) chose move: '), write(Move), nl.
 choose_move(GameState-computer2,2, Move):-
-    greedy_move(GameState, Move).
+    greedy_move(GameState, Move),
+    nl, write('Computer2 (greedy) chose move: '), write(Move), nl.
 
 
 
