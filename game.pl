@@ -372,23 +372,16 @@ evaluate_board(GameState, Value, blue):-
     Value is NumBlue - NumRed.
 
 ratio_surrounding_color(GameState, Color, Num):-
-    findall(Stones, (
-            get_piece(GameState, C-L, Color),
-            adjacent_stones(GameState, C-L, Stones)
-    ), StonesList),
-    findall(EmptyStone, (
-            member(Stones, StonesList),
-            member(EmptyStone, Stones),
-            EmptyStone == empty
-    ), EmptyStones),
-    findall(NonEmptyStone, (
-            member(Stones, StonesList),
-            member(NonEmptyStone, Stones),
-            NonEmptyStone \= empty
-    ), NonEmptyStones),
-    length(NonEmptyStones, NonEmptyStoneLen),
-    length(EmptyStones, EmptyStonesLen),
-    Num is NonEmptyStoneLen - EmptyStonesLen.
+    findall(Ratio,(
+            get_piece(GameState,C-L,Color),
+            adjacent_stones(GameState, C-L, Stones),
+            findall(Emp, (member(empty,Stones)), Empties),
+            length(Empties,LenEmpt),
+            length(Stones, LenTot),
+            Ratio is LenEmpt/LenTot),Ratios
+    ),
+    sumlist(Ratios,NumSimetric),
+    Num is - NumSimetric.
 
 choose_move(GameState-computer1,1, Move) :-
     valid_moves(GameState-computer1, Moves),
@@ -402,7 +395,8 @@ choose_move(GameState-computer1,2, Move):-
     findall(Mv, NewState^( member(Mv, Moves),
         move(GameState-computer1, Mv, NewState),
         evaluate_board(NewState, V,red) ),GoodMoves ),
-    random_select(Move,GoodMoves,_Rest).
+    random_select(Move,GoodMoves,_Rest),
+    write('Value'), write(V),nl,
     nl, write('Computer1 (greedy) chose move: '), write(Move), nl.
 choose_move(GameState-computer2,1, Move) :-
     valid_moves(GameState-computer2, Moves),
@@ -417,6 +411,7 @@ choose_move(GameState-computer2,2, Move):-
         move(GameState-computer2, Mv, NewState),
         evaluate_board(NewState, V,blue) ),GoodMoves ),
     random_select(Move,GoodMoves,_Rest),
+    write('Value'), write(V),nl,
     nl, write('Computer2 (greedy) chose move: '), write(Move), nl.
     
 valid_moves(GameState-Player, Moves) :-
