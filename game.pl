@@ -390,16 +390,19 @@ ratio_surrounding_color(GameState, Color, Num):-
     length(EmptyStones, EmptyStonesLen),
     Num is NonEmptyStoneLen - EmptyStonesLen.
 
-    
 choose_move(GameState-computer1,1, Move) :-
     valid_moves(GameState-computer1, Moves),
     random_select(Move, Moves, _Rest),
     nl, write('Computer1 (random) chose move: '), write(Move), nl.
 choose_move(GameState-computer1,2, Move):-
     valid_moves(GameState-computer1, Moves),
-    setof(Value-Mv, NewState^( member(Mv, Moves),
+    setof(Value, NewState^Mv^( member(Mv, Moves),
         move(GameState-computer1, Mv, NewState),
-        evaluate_board(NewState, Value,red) ), [_V-Move|_]).
+        evaluate_board(NewState, Value,red) ), [V|_]),
+    findall(Mv, NewState^( member(Mv, Moves),
+        move(GameState-computer1, Mv, NewState),
+        evaluate_board(NewState, V,red) ),GoodMoves ),
+    random_select(Move,GoodMoves,_Rest).
     nl, write('Computer1 (greedy) chose move: '), write(Move), nl.
 choose_move(GameState-computer2,1, Move) :-
     valid_moves(GameState-computer2, Moves),
@@ -407,12 +410,15 @@ choose_move(GameState-computer2,1, Move) :-
     nl, write('Computer2 (random) chose move: '), write(Move), nl.
 choose_move(GameState-computer2,2, Move):-
     valid_moves(GameState-computer2, Moves),
-    setof(Value-Mv, NewState^( member(Mv, Moves),
+    setof(Value, NewState^Mv^( member(Mv, Moves),
         move(GameState-computer2, Mv, NewState),
-        evaluate_board(NewState, Value,blue) ), [_V-Move|_]),
+        evaluate_board(NewState, Value,blue) ), [V|_]),
+    findall(Mv, NewState^( member(Mv, Moves),
+        move(GameState-computer2, Mv, NewState),
+        evaluate_board(NewState, V,blue) ),GoodMoves ),
+    random_select(Move,GoodMoves,_Rest),
     nl, write('Computer2 (greedy) chose move: '), write(Move), nl.
-
-
+    
 valid_moves(GameState-Player, Moves) :-
     findall(Move, (
         within_range(Move,GameState),
