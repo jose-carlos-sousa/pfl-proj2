@@ -80,6 +80,19 @@ init_board_cell(X,Size, blue,Size) :-
 
 init_board_cell(X,Y, empty,Size).
 
+get_variant(Variant):-
+    write('Choose variant:'), nl,
+    write('1. Standard'), nl,
+    write('2. Medium Churn'), nl,
+    write('3. High Churn'), nl,
+    catch(read(Variant_Chosen), _, (write('Read error. This may cause the next reads to fail.'), nl, get_variant(Variant_Chosen))),
+    validate(Variant_Chosen, Variant).
+
+validate(Variant_Chosen, Variant) :-
+    member(Variant_Chosen, [1, 2, 3]),
+    !,
+    Variant = Variant_Chosen.
+
 get_game_mode(GameMode):-
     write('Choose game mode:'), nl,
     write('1. Player vs Player'), nl,
@@ -107,61 +120,62 @@ validate_AI(AI, Level) :-
 
 play:-
     get_game_mode(GameMode),
+    get_variant(Variant),
     get_board_size(Size),
-    play(GameMode, Size).
+    play(GameMode,Variant,Size).
 
 % pessoas reais
-play(1, Size):-
+play(1,Variant, Size):-
     initial_state(1-Size, GameState-Player),
     display_game(GameState-Player),
-    game_cycle(GameState-Player, _, 1).
+    game_cycle(GameState-Player-Variant, _, 1).
 
 % computador vai em segundo
-play(2, Size):-
+play(2,Variant, Size):-
     get_AI_level(Level),
     initial_state(2-Size, GameState-Player),
     display_game(GameState-Player),
-    game_cycle(GameState-Player, Level, 2).
+    game_cycle(GameState-Player-Variant, Level, 2).
 
 % computador vai em primeiro
-play(3, Size):-
+play(3,Variant, Size):-
     get_AI_level(Level),
     initial_state(3-Size, GameState-Player),
     display_game(GameState-Player),
-    game_cycle(GameState-Player, Level, 3).
+    game_cycle(GameState-Player-Variant, Level, 3).
 
 % trabalhar nesta opção depois
-play(4, Size):-
+play(4,Variant, Size):-
     get_AI_level(Level),
     initial_state(4-Size, GameState-Player),
     display_game(GameState-Player),
-    game_cycle(GameState-Player, Level, 4).
+    game_cycle(GameState-Player-Variant, Level, 4).
 
-game_cycle(GameState-Player,Level,GameMode):-
+game_cycle(GameState-Player-Variant,Level,GameMode):-
     game_over(GameState, Winner), !,
     congratulate(Winner).
-game_cycle(GameState-Player,Level,GameMode):-
+game_cycle(GameState-Player-Variant,Level,GameMode):-
     choose_move(GameState-Player,Level, Move),
-    move(GameState-Player, Move, NewGameState),
+    move(GameState-Player-Variant, Move, NewGameState),
     next_player(GameMode, Player, NextPlayer), % could be done in move/3
     display_game(NewGameState-NextPlayer),
-    game_cycle(NewGameState-NextPlayer,Level,GameMode).
+    game_cycle(NewGameState-NextPlayer-Variant,Level,GameMode).
 
-game_cycle(GameState-Player,Level,GameMode):-
+game_cycle(GameState-Player-Variant,Level,GameMode):-
     display_game(GameState-Player),
-    game_cycle(GameState-Player,Level,GameMode).
+    game_cycle(GameState-Player-Variant,Level,GameMode).
 
 % basicamente vemos se o move é válido e se vamos buscar a peça , metemos uma preta no sitio dela, e depois metemos a peça no sitio de destino
-move(GameState-Player, C1-L1-C2-L2, NewGameState):-
+move(GameState-Player-Variant, C1-L1-C2-L2, NewGameState):-
     check_move(GameState-Player, C1-L1-C2-L2),
     !,
     get_piece(GameState, C1-L1, Piece),
     set_piece(GameState, C1-L1, black, TempGameState),
     set_piece(TempGameState, C2-L2, Piece, TempGameState2),
-    remove_blocked_stones(TempGameState2, TempGameState3),
+    remove_blocked_stones(Variant,TempGameState2, TempGameState3),
     NewGameState = TempGameState3.
 
-move(GameState-Player, _, GameState):- fail.
+move(GameState-Player-Variant, _, GameState):- fail.
 
 next_player(1,player1, player2).
 next_player(1,player2, player1).
@@ -187,6 +201,23 @@ set_piece(GameState, C-L, Piece, NewGameState):-
     replace(C, Row, Piece, NewRow),
     replace(L, GameState, NewRow, NewGameState).
 
+replace_pieces(GameState, Color1, Color2, NewGameState):-
+    length(GameState, L),
+    replace_pieces(GameState, 1-1, L-L, Color1, Color2, NewGameState).
+
+replace_pieces(GameState, C-L, C-L, Color1, Color2, NewGameState):-
+    get_piece(GameState, C-L, Color1),
+    set_piece(GameState, C-L, Color2, NewGameState), !.
+replace_pieces(GameState, C-L, C-L, _ , _ ,GameState).
+  
+replace_pieces(GameState, C-L, C1-L1, Color1, Color2, NewGameState):-
+    get_piece(GameState, C-L, Color1),
+    set_piece(GameState, C-L, Color2, TempGameState),
+    next_position(C-L, C1-L1, NextC-NextL),
+    replace_pieces(TempGameState, NextC-NextL, C1-L1, Color1, Color2, NewGameState), !.
+replace_pieces(GameState, C-L, C1-L1, Color1, Color2, NewGameState):-
+    next_position(C-L, C1-L1, NextC-NextL),
+    replace_pieces(GameState, NextC-NextL, C1-L1, Color1, Color2, NewGameState).
 replace(1, [_|T], X, [X|T]).
 replace(I, [H|T], X, [H|R]):-
     I > 1,
@@ -211,17 +242,19 @@ adjacent(C-L, C2-L2):-
 adjacent(C-L, C2-L2):-
     C2 is C - 1, L2 is L + 1.
 
-remove_blocked_stones([H|T], NewGameState):-
+
+remove_blocked_stones(Variant,[H|T], NewGameState):-
     length(H, NumCols),
     length([H|T], NumRows),
-    remove_blocked_stones_helper(1-1, NumCols-NumRows, [H|T],[H|T], NewGameState) , !.
+    remove_blocked_stones_helper(Variant,1-1, NumCols-NumRows, [H|T],[H|T], NewGameState) , !.
 % has original board board accumulator and final 
-remove_blocked_stones_helper(C-L, C-L, GameState,GameStateAcc, NewGameState):- 
-    remove_blocked_stones_piece(GameState,GameStateAcc, C-L, NewGameState).
-remove_blocked_stones_helper(C-L, C2-L2, GameState,GameStateAcc, NextGameState):-
-    remove_blocked_stones_piece(GameState,GameStateAcc, C-L, NewGameState),
+remove_blocked_stones_helper(Variant,C-L, C-L, GameState,GameStateAcc, NewGameState):- 
+    remove_blocked_stones_piece(Variant,GameState,GameStateAcc, C-L, NewGameState).
+remove_blocked_stones_helper(Variant,C-L, C2-L2, GameState,GameStateAcc, NextGameState):-
+    remove_blocked_stones_piece(Variant,GameState,GameStateAcc, C-L, NewGameState),
     next_position(C-L, C2-L2, NextC-NextL),
-    remove_blocked_stones_helper(NextC-NextL, C2-L2,GameState ,NewGameState, NextGameState).
+    remove_blocked_stones_helper(Variant,NextC-NextL, C2-L2,GameState ,NewGameState, NextGameState).
+
 
 next_position(C-L, C-L2, NextC-NextL):-
     NextL is L + 1,
@@ -232,20 +265,40 @@ next_position(C-L, C2-L2, NextC-NextL):-
     
 
 % se o atual for empty  eu n mudo
-remove_blocked_stones_piece(GameState,GameAcc,C-L, GameAcc):-
+remove_blocked_stones_piece(Variant,GameState,GameAcc,C-L, GameAcc):-
     get_piece(GameState, C-L, empty), !.
 
-remove_blocked_stones_piece(GameState,GameAcc,C-L, GameAcc):-
+remove_blocked_stones_piece(Variant,GameState,GameAcc,C-L, GameAcc):-
     get_piece(GameState, C-L, black), !.
 
-remove_blocked_stones_piece( GameState,GameAcc,C-L, NewGameState ):-
+remove_blocked_stones_piece(1, GameState,GameAcc,C-L, NewGameState ):-
+    get_piece(GameState, C-L, Piece),
+    adjacent_stones(GameState, C-L, Stones),
+    \+ member(empty, Stones),
+    set_piece(GameAcc, C-L, empty, NewGameState),!.
+
+remove_blocked_stones_piece(2, GameState,GameAcc,C-L, NewGameState ):-
     get_piece(GameState, C-L, Piece),
     adjacent_stones(GameState, C-L, Stones),
     \+ member(empty, Stones),
     set_piece(GameAcc, C-L, empty, NewBoard1),
     remove_all_black_neightbours(NewBoard1, C-L, NewGameState), !.
+
+remove_blocked_stones_piece(3, GameState,GameAcc,C-L, NewGameState ):-
+    get_piece(GameState, C-L, Piece),
+    adjacent_stones(GameState, C-L, Stones),
+    \+ member(empty, Stones),
+    set_piece(GameAcc, C-L, empty, NewBoard1),
+    remove_all_black(NewBoard1, NewGameState), !.
+
+
+
+remove_all_black(GameState, NewBoard):-
+    replace_pieces(GameState, black, empty,NewBoard).
+    
+    
 % if we gucci lets just chill i mmmmmmmma fell n sei que light alivevevveveve i see forever in ur eyes she smile smileleeeenjewjbalvlqeLVKJEDAS<
-remove_blocked_stones_piece( GameState,GameAcc,C-L, GameAcc):-
+remove_blocked_stones_piece( Variant,GameState,GameAcc,C-L, GameAcc):-
     get_piece(GameState, C-L, Piece),
     adjacent_stones(GameState, C-L, Stones),
     member(empty, Stones) , !.
