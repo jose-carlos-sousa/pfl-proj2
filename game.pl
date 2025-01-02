@@ -86,12 +86,15 @@ get_variant(Variant):-
     write('2. Medium Churn'), nl,
     write('3. High Churn'), nl,
     catch(read(Variant_Chosen), _, (write('Read error. This may cause the next reads to fail.'), nl, get_variant(Variant_Chosen))),
-    validate(Variant_Chosen, Variant).
+    validate_variant(Variant_Chosen, Variant).
 
-validate(Variant_Chosen, Variant) :-
+validate_variant(Variant_Chosen, Variant) :-
     member(Variant_Chosen, [1, 2, 3]),
     !,
     Variant = Variant_Chosen.
+validate_variant(_, Variant) :-
+    nl, write('Invalid variant chosen.'), nl, nl,
+    get_variant(Variant).
 
 get_game_mode(GameMode):-
     write('Choose game mode:'), nl,
@@ -106,6 +109,9 @@ validate_mode(Mode, GameMode) :-
     member(Mode, [1, 2, 3, 4]),
     !,
     GameMode = Mode.
+validate_mode(_, GameMode) :-
+    nl, write('Invalid mode chosen.'), nl, nl,
+    get_game_mode(GameMode).
 
 get_AI_level(Level):-
     write('Choose AI level:'), nl,
@@ -117,6 +123,9 @@ validate_AI(AI, Level) :-
     member(AI, [1, 2]),
     !,
     Level = AI.
+validate_AI(_, Level) :-
+    nl, write('Invalid AI level chosen.'), nl, nl,
+    get_AI_level(Level).
 
 play:-
     get_game_mode(GameMode),
