@@ -161,10 +161,10 @@ play(4,Variant, Size):-
     game_cycle(GameState-Player-Variant, Level, 4).
 
 game_cycle(GameState-Player-Variant,Level,GameMode):-
-    game_over(GameState, Winner), !,
+    game_over(GameState-Player, Winner), !,
     congratulate(Winner).
 game_cycle(GameState-Player-Variant,Level,GameMode):-
-    choose_move(GameState-Player,Level, Move),
+    choose_move(GameState-Player-Variant,Level, Move),
     move(GameState-Player-Variant, Move, NewGameState),
     next_player(GameMode, Player, NextPlayer), % could be done in move/3
     display_game(NewGameState-NextPlayer),
@@ -300,8 +300,6 @@ remove_blocked_stones_piece(3, GameState,GameAcc,C-L, NewGameState ):-
     set_piece(GameAcc, C-L, empty, NewBoard1),
     remove_all_black(NewBoard1, NewGameState), !.
 
-
-
 remove_all_black(GameState, NewBoard):-
     replace_pieces(GameState, black, empty,NewBoard).
     
@@ -335,7 +333,7 @@ valid_queen_move(GameState, C1-L1-C2-L2):-
     valid_direction(C1-L1-C2-L2),
     path_is_clear(GameState, C1-L1-C2-L2).
 valid_direction(C1-L1-C2-L2):-
-    C1 =:=C2.
+    C1 =:= C2.
 valid_direction(C1-L1-C2-L2):-
     L1 =:= L2.
 valid_direction(C1-L1-C2-L2):-
@@ -418,15 +416,15 @@ there_are_red_left([CurRow|OtherRows]):-
 
 
 % interaction to select move
-choose_move(GameState-player1,Level, Move):-
+choose_move(GameState-player1-Variant,Level, Move):-
     get_move(Move).
-choose_move(GameState-player2,Level, Move):-
+choose_move(GameState-player2-Variant,Level, Move):-
     get_move(Move).
 
-valid_moves(GameState-Player, Moves) :-
+valid_moves(GameState-Player-Variant, Moves) :-
     findall(Move, (
         within_range(Move,GameState),
-        move(GameState-Player, Move, NewState)  % No trailing comma here!
+        move(GameState-Player-Variant, Move, NewState)  % No trailing comma here!
     ), Moves).
 
 within_range(Move,GameState) :-
@@ -440,24 +438,24 @@ within_range(Move,GameState) :-
     
 
 
-choose_move(GameState-computer1,1, Move) :-
-    valid_moves(GameState-computer1, Moves),
+choose_move(GameState-computer1-Variant,1, Move) :-
+    valid_moves(GameState-computer1-Variant, Moves),
     random_select(Move, Moves, _Rest),
     inverse_transform_move(Move, TransformedMove),
     nl, write('Red Computer (random) chose move: '), write(TransformedMove), nl.
 
-choose_move(GameState-computer1,2, Move):-
+choose_move(GameState-computer1-Variant,2, Move):-
     greedy_move(GameState, Move),
     inverse_transform_move(Move, TransformedMove),
     nl, write('Red Computer (greedy) chose move: '), write(TransformedMove), nl.
 
-choose_move(GameState-computer2,1, Move) :-
-    valid_moves(GameState-computer2, Moves),
+choose_move(GameState-computer2-Variant,1, Move) :-
+    valid_moves(GameState-computer2-Variant, Moves),
     random_select(Move, Moves, _Rest),
     inverse_transform_move(Move, TransformedMove),
     nl, write('Blue Computer (random) chose move: '), write(TransformedMove), nl.
 
-choose_move(GameState-computer2,2, Move):-
+choose_move(GameState-computer2-Variant,2, Move):-
     greedy_move(GameState, Move),
     inverse_transform_move(Move, TransformedMove),
     nl, write('Blue Computer (greedy) chose move: '), write(TransformedMove), nl.
