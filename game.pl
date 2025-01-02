@@ -36,11 +36,11 @@ init_board(Size, Board) :-
     init_board(Size, 1, [], Board). 
 
 init_board(Size, Row, AccumulatedBoard, Board) :-
-    Row =< Size, 
-    init_board_row(Row, Size, BoardRow), 
+    Row =< Size,
+    init_board_row(Row, Size, BoardRow),
     append(AccumulatedBoard, [BoardRow], NewAccumulatedBoard),
-    NextRow is Row + 1, 
-    init_board(Size, NextRow, NewAccumulatedBoard, Board). 
+    NextRow is Row + 1,
+    init_board(Size, NextRow, NewAccumulatedBoard, Board).
 
 init_board(Size, Row, Board, Board) :-
     Row > Size.
@@ -61,22 +61,22 @@ init_board_row(Row, Col, Size, Acc, BoardRow) :-
 init_board_cell(1,Y, red,Size) :-
     Y > 1,
     Y < Size,
-    Y mod 2 =:= 0,!.
+    Y mod 2 =:= 1,!.
 
 init_board_cell(Size,Y, red,Size) :-
     Y > 1,
     Y < Size,
-    Y mod 2 =:= 1,!.
+    Y mod 2 =:= 0,!.
 
 init_board_cell(X,1, blue,Size) :-
     X > 1,
     X < Size,
-    X mod 2 =:= 1,!.
+    X mod 2 =:= 0,!.
 
 init_board_cell(X,Size, blue,Size) :-
     X > 1,
     X < Size,
-    X mod 2 =:= 0,!.
+    X mod 2 =:= 1,!.
 
 init_board_cell(X,Y, empty,Size).
 

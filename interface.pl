@@ -26,7 +26,7 @@ display_colored_player(Player) :-
 display_board(Board) :-
     length(Board, Size),
     display_column_labels(Size),
-    display_board_rows(Board, 1).
+    display_board_rows(Board, Size).
 
 
 display_column_labels(Size) :-
@@ -44,13 +44,17 @@ display_columns(Col, Size) :-
 display_columns(_, _).
 
 
-display_board_rows([], _).
-display_board_rows([Row | Rest], RowNum) :-
+display_board_rows(Board, Size) :-
+    reverse(Board, ReversedBoard),
+    display_board_rows_reversed(ReversedBoard, Size, Size).
+
+display_board_rows_reversed([], _, _).
+display_board_rows_reversed([Row | Rest], RowNum, Size) :-
     format('~w |', [RowNum]), % Row label
     display_row(Row),
     nl,
-    NextRowNum is RowNum + 1,
-    display_board_rows(Rest, NextRowNum).
+    NextRowNum is RowNum - 1,
+    display_board_rows_reversed(Rest, NextRowNum, Size).
 
 display_row([]).
 display_row([Cell | Rest]) :-
