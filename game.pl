@@ -497,12 +497,12 @@ choose_move(GameState-computer2-Variant,2, Move):-
 inverse_transform_move(StartColNum-StartRowNum-EndColNum-EndRowNum, Start-End) :-
     num_to_col(StartColNum, StartCol),
     num_to_col(EndColNum, EndCol),
-    number_codes(StartRowNum, [StartRowCode]),
-    number_codes(EndRowNum, [EndRowCode]),
-    char_code(StartRowChar, StartRowCode),
-    char_code(EndRowChar, EndRowCode),
-    atom_chars(Start, [StartCol, StartRowChar]),
-    atom_chars(End, [EndCol, EndRowChar]).
+    number_codes(StartRowNum, StartRowCodes),
+    number_codes(EndRowNum, EndRowCodes),
+    atom_codes(StartRow, StartRowCodes),
+    atom_codes(EndRow, EndRowCodes),
+    atom_concat(StartCol, StartRow, Start),
+    atom_concat(EndCol, EndRow, End).
 
 num_to_col(Num, Col) :-
     Code is Num + 96, % 1 -> 'a'
