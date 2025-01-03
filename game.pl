@@ -37,11 +37,11 @@ init_board(Size, Board) :-
     init_board(Size, 1, [], Board). 
 
 init_board(Size, Row, AccumulatedBoard, Board) :-
-    Row =< Size, 
-    init_board_row(Row, Size, BoardRow), 
+    Row =< Size,
+    init_board_row(Row, Size, BoardRow),
     append(AccumulatedBoard, [BoardRow], NewAccumulatedBoard),
-    NextRow is Row + 1, 
-    init_board(Size, NextRow, NewAccumulatedBoard, Board). 
+    NextRow is Row + 1,
+    init_board(Size, NextRow, NewAccumulatedBoard, Board).
 
 init_board(Size, Row, Board, Board) :-
     Row > Size.
@@ -62,24 +62,40 @@ init_board_row(Row, Col, Size, Acc, BoardRow) :-
 init_board_cell(1,Y, red,Size) :-
     Y > 1,
     Y < Size,
-    Y mod 2 =:= 0,!.
+    Y mod 2 =:= 1,!.
 
 init_board_cell(Size,Y, red,Size) :-
     Y > 1,
     Y < Size,
-    Y mod 2 =:= 1,!.
+    Y mod 2 =:= 0,!.
 
 init_board_cell(X,1, blue,Size) :-
     X > 1,
     X < Size,
-    X mod 2 =:= 1,!.
+    X mod 2 =:= 0,!.
 
 init_board_cell(X,Size, blue,Size) :-
     X > 1,
     X < Size,
-    X mod 2 =:= 0,!.
+    X mod 2 =:= 1,!.
 
 init_board_cell(X,Y, empty,Size).
+
+get_variant(Variant):-
+    write('Choose variant:'), nl,
+    write('1. Standard'), nl,
+    write('2. Medium Churn'), nl,
+    write('3. High Churn'), nl,
+    catch(read(Variant_Chosen), _, (write('Read error. This may cause the next reads to fail.'), nl, get_variant(Variant_Chosen))),
+    validate_variant(Variant_Chosen, Variant).
+
+validate_variant(Variant_Chosen, Variant) :-
+    member(Variant_Chosen, [1, 2, 3]),
+    !,
+    Variant = Variant_Chosen.
+validate_variant(_, Variant) :-
+    nl, write('Invalid variant chosen.'), nl, nl,
+    get_variant(Variant).
 
 get_game_mode(GameMode):-
     write('Choose game mode:'), nl,
@@ -94,6 +110,9 @@ validate_mode(Mode, GameMode) :-
     member(Mode, [1, 2, 3, 4]),
     !,
     GameMode = Mode.
+validate_mode(_, GameMode) :-
+    nl, write('Invalid mode chosen.'), nl, nl,
+    get_game_mode(GameMode).
 
 get_AI_level(Level):-
     write('Choose AI level:'), nl,
@@ -105,64 +124,68 @@ validate_AI(AI, Level) :-
     member(AI, [1, 2]),
     !,
     Level = AI.
+validate_AI(_, Level) :-
+    nl, write('Invalid AI level chosen.'), nl, nl,
+    get_AI_level(Level).
 
 play:-
     get_game_mode(GameMode),
+    get_variant(Variant),
     get_board_size(Size),
-    play(GameMode, Size).
+    play(GameMode,Variant,Size).
 
 % pessoas reais
-play(1, Size):-
+play(1,Variant, Size):-
     initial_state(1-Size, GameState-Player),
     display_game(GameState-Player),
-    game_cycle(GameState-Player, _, 1).
+    game_cycle(GameState-Player-Variant, _, 1).
 
 % computador vai em segundo
-play(2, Size):-
+play(2,Variant, Size):-
     get_AI_level(Level),
     initial_state(2-Size, GameState-Player),
     display_game(GameState-Player),
-    game_cycle(GameState-Player, Level, 2).
+    game_cycle(GameState-Player-Variant, Level, 2).
 
 % computador vai em primeiro
-play(3, Size):-
+play(3,Variant, Size):-
     get_AI_level(Level),
     initial_state(3-Size, GameState-Player),
     display_game(GameState-Player),
-    game_cycle(GameState-Player, Level, 3).
+    game_cycle(GameState-Player-Variant, Level, 3).
 
 % trabalhar nesta opção depois
-play(4, Size):-
+play(4,Variant, Size):-
     get_AI_level(Level),
     initial_state(4-Size, GameState-Player),
     display_game(GameState-Player),
-    game_cycle(GameState-Player, Level, 4).
+    game_cycle(GameState-Player-Variant, Level, 4).
 
-game_cycle(GameState-Player,Level,GameMode):-
-    game_over(GameState, Winner), !,
+game_cycle(GameState-Player-Variant,Level,GameMode):-
+    game_over(GameState-Player, Winner), !,
     congratulate(Winner).
-game_cycle(GameState-Player,Level,GameMode):-
-    choose_move(GameState-Player,Level, Move),
-    move(GameState-Player, Move, NewGameState),
+game_cycle(GameState-Player-Variant,Level,GameMode):-
+    choose_move(GameState-Player-Variant,Level, Move),
+    move(GameState-Player-Variant, Move, NewGameState),
     next_player(GameMode, Player, NextPlayer), % could be done in move/3
     display_game(NewGameState-NextPlayer),
-    game_cycle(NewGameState-NextPlayer,Level,GameMode).
+    game_cycle(NewGameState-NextPlayer-Variant,Level,GameMode).
 
-game_cycle(GameState-Player,Level,GameMode):-
+game_cycle(GameState-Player-Variant,Level,GameMode):-
     display_game(GameState-Player),
-    game_cycle(GameState-Player,Level,GameMode).
+    game_cycle(GameState-Player-Variant,Level,GameMode).
 
 % basicamente vemos se o move é válido e se vamos buscar a peça , metemos uma preta no sitio dela, e depois metemos a peça no sitio de destino
-move(GameState-Player, C1-L1-C2-L2, NewGameState):-
+move(GameState-Player-Variant, C1-L1-C2-L2, NewGameState):-
     check_move(GameState-Player, C1-L1-C2-L2),
     !,
     get_piece(GameState, C1-L1, Piece),
     set_piece(GameState, C1-L1, black, TempGameState),
     set_piece(TempGameState, C2-L2, Piece, TempGameState2),
-    remove_blocked_stones(TempGameState2, TempGameState3),
+    remove_blocked_stones(Variant,TempGameState2, TempGameState3),
     NewGameState = TempGameState3.
 
-move(GameState-Player, _, GameState):- fail.
+move(GameState-Player-Variant, _, GameState):- fail.
 
 next_player(1,player1, player2).
 next_player(1,player2, player1).
@@ -188,6 +211,23 @@ set_piece(GameState, C-L, Piece, NewGameState):-
     replace(C, Row, Piece, NewRow),
     replace(L, GameState, NewRow, NewGameState).
 
+replace_pieces(GameState, Color1, Color2, NewGameState):-
+    length(GameState, L),
+    replace_pieces(GameState, 1-1, L-L, Color1, Color2, NewGameState).
+
+replace_pieces(GameState, C-L, C-L, Color1, Color2, NewGameState):-
+    get_piece(GameState, C-L, Color1),
+    set_piece(GameState, C-L, Color2, NewGameState), !.
+replace_pieces(GameState, C-L, C-L, _ , _ ,GameState).
+  
+replace_pieces(GameState, C-L, C1-L1, Color1, Color2, NewGameState):-
+    get_piece(GameState, C-L, Color1),
+    set_piece(GameState, C-L, Color2, TempGameState),
+    next_position(C-L, C1-L1, NextC-NextL),
+    replace_pieces(TempGameState, NextC-NextL, C1-L1, Color1, Color2, NewGameState), !.
+replace_pieces(GameState, C-L, C1-L1, Color1, Color2, NewGameState):-
+    next_position(C-L, C1-L1, NextC-NextL),
+    replace_pieces(GameState, NextC-NextL, C1-L1, Color1, Color2, NewGameState).
 replace(1, [_|T], X, [X|T]).
 replace(I, [H|T], X, [H|R]):-
     I > 1,
@@ -212,17 +252,19 @@ adjacent(C-L, C2-L2):-
 adjacent(C-L, C2-L2):-
     C2 is C - 1, L2 is L + 1.
 
-remove_blocked_stones([H|T], NewGameState):-
+
+remove_blocked_stones(Variant,[H|T], NewGameState):-
     length(H, NumCols),
     length([H|T], NumRows),
-    remove_blocked_stones_helper(1-1, NumCols-NumRows, [H|T],[H|T], NewGameState) , !.
+    remove_blocked_stones_helper(Variant,1-1, NumCols-NumRows, [H|T],[H|T], NewGameState) , !.
 % has original board board accumulator and final 
-remove_blocked_stones_helper(C-L, C-L, GameState,GameStateAcc, NewGameState):- 
-    remove_blocked_stones_piece(GameState,GameStateAcc, C-L, NewGameState).
-remove_blocked_stones_helper(C-L, C2-L2, GameState,GameStateAcc, NextGameState):-
-    remove_blocked_stones_piece(GameState,GameStateAcc, C-L, NewGameState),
+remove_blocked_stones_helper(Variant,C-L, C-L, GameState,GameStateAcc, NewGameState):- 
+    remove_blocked_stones_piece(Variant,GameState,GameStateAcc, C-L, NewGameState).
+remove_blocked_stones_helper(Variant,C-L, C2-L2, GameState,GameStateAcc, NextGameState):-
+    remove_blocked_stones_piece(Variant,GameState,GameStateAcc, C-L, NewGameState),
     next_position(C-L, C2-L2, NextC-NextL),
-    remove_blocked_stones_helper(NextC-NextL, C2-L2,GameState ,NewGameState, NextGameState).
+    remove_blocked_stones_helper(Variant,NextC-NextL, C2-L2,GameState ,NewGameState, NextGameState).
+
 
 next_position(C-L, C-L2, NextC-NextL):-
     NextL is L + 1,
@@ -233,20 +275,38 @@ next_position(C-L, C2-L2, NextC-NextL):-
     
 
 % se o atual for empty  eu n mudo
-remove_blocked_stones_piece(GameState,GameAcc,C-L, GameAcc):-
+remove_blocked_stones_piece(Variant,GameState,GameAcc,C-L, GameAcc):-
     get_piece(GameState, C-L, empty), !.
 
-remove_blocked_stones_piece(GameState,GameAcc,C-L, GameAcc):-
+remove_blocked_stones_piece(Variant,GameState,GameAcc,C-L, GameAcc):-
     get_piece(GameState, C-L, black), !.
 
-remove_blocked_stones_piece( GameState,GameAcc,C-L, NewGameState ):-
+remove_blocked_stones_piece(1, GameState,GameAcc,C-L, NewGameState ):-
+    get_piece(GameState, C-L, Piece),
+    adjacent_stones(GameState, C-L, Stones),
+    \+ member(empty, Stones),
+    set_piece(GameAcc, C-L, empty, NewGameState),!.
+
+remove_blocked_stones_piece(2, GameState,GameAcc,C-L, NewGameState ):-
     get_piece(GameState, C-L, Piece),
     adjacent_stones(GameState, C-L, Stones),
     \+ member(empty, Stones),
     set_piece(GameAcc, C-L, empty, NewBoard1),
     remove_all_black_neightbours(NewBoard1, C-L, NewGameState), !.
+
+remove_blocked_stones_piece(3, GameState,GameAcc,C-L, NewGameState ):-
+    get_piece(GameState, C-L, Piece),
+    adjacent_stones(GameState, C-L, Stones),
+    \+ member(empty, Stones),
+    set_piece(GameAcc, C-L, empty, NewBoard1),
+    remove_all_black(NewBoard1, NewGameState), !.
+
+remove_all_black(GameState, NewBoard):-
+    replace_pieces(GameState, black, empty,NewBoard).
+    
+    
 % if we gucci lets just chill i mmmmmmmma fell n sei que light alivevevveveve i see forever in ur eyes she smile smileleeeenjewjbalvlqeLVKJEDAS<
-remove_blocked_stones_piece( GameState,GameAcc,C-L, GameAcc):-
+remove_blocked_stones_piece( Variant,GameState,GameAcc,C-L, GameAcc):-
     get_piece(GameState, C-L, Piece),
     adjacent_stones(GameState, C-L, Stones),
     member(empty, Stones) , !.
@@ -274,7 +334,7 @@ valid_queen_move(GameState, C1-L1-C2-L2):-
     valid_direction(C1-L1-C2-L2),
     path_is_clear(GameState, C1-L1-C2-L2).
 valid_direction(C1-L1-C2-L2):-
-    C1 =:=C2.
+    C1 =:= C2.
 valid_direction(C1-L1-C2-L2):-
     L1 =:= L2.
 valid_direction(C1-L1-C2-L2):-
@@ -314,22 +374,33 @@ player_piece(red, player1).
 player_piece(red, computer1).
 player_piece(blue, player2).
 player_piece(blue, computer2).
-game_over(GameState, Winner):-
-    there_are_blue_left(GameState), 
+
+game_over(GameState-Player, Winner):-
+    there_are_blue_left(GameState),
     there_are_red_left(GameState),
     fail.
-game_over(GameState, Winner):-
+
+game_over(GameState-Player, Winner):-
     there_are_blue_left(GameState), 
     \+ there_are_red_left(GameState),
     Winner = blue.
-game_over(GameState, Winner):-
+
+game_over(GameState-Player, Winner):-
     there_are_red_left(GameState), 
     \+ there_are_blue_left(GameState),
     Winner = red.
-game_over(GameState, Winner):-
+
+game_over(GameState-Player, Winner):-
     \+ there_are_red_left(GameState), 
     \+ there_are_blue_left(GameState),
-    Winner = draw.
+    get_draw_winner(Player, Winner).
+
+get_draw_winner(player1, blue).
+get_draw_winner(player2, red).
+get_draw_winner(computer1, blue).
+get_draw_winner(computer2, red).
+
+
 there_are_blue_left([]):- fail.
 there_are_blue_left([CurRow|OtherRows]):-
     member(blue, CurRow), !.
@@ -346,9 +417,9 @@ there_are_red_left([CurRow|OtherRows]):-
 
 
 % interaction to select move
-choose_move(GameState-player1,Level, Move):-
+choose_move(GameState-player1-Variant,Level, Move):-
     get_move(Move).
-choose_move(GameState-player2,Level, Move):-
+choose_move(GameState-player2-Variant,Level, Move):-
     get_move(Move).
 
 
@@ -383,56 +454,93 @@ ratio_surrounding_color(GameState, Color, Num):-
     sumlist(Ratios,NumSimetric),
     Num is - NumSimetric.
 
-choose_move(GameState-computer1,1, Move) :-
-    valid_moves(GameState-computer1, Moves),
-    random_select(Move, Moves, _Rest),
-    nl, write('Computer1 (random) chose move: '), write(Move), nl.
-choose_move(GameState-computer1,2, Move):-
-    valid_moves(GameState-computer1, Moves),
-    setof(Value, NewState^Mv^( member(Mv, Moves),
-        move(GameState-computer1, Mv, NewState),
-        value(NewState, red, Value) ), [V|_]),
-    findall(Mv, NewState^( member(Mv, Moves),
-        move(GameState-computer1, Mv, NewState),
-        value(NewState, red, V) ), GoodMoves),
-    random_select(Move,GoodMoves,_Rest),
-    nl, write('Computer1 (greedy) chose move: '), write(Move), nl.
-choose_move(GameState-computer2,1, Move) :-
-    valid_moves(GameState-computer2, Moves),
-    random_select(Move, Moves, _Rest),
-    nl, write('Computer2 (random) chose move: '), write(Move), nl.
-choose_move(GameState-computer2,2, Move):-
-    valid_moves(GameState-computer2, Moves),
-    setof(Value, NewState^Mv^( member(Mv, Moves),
-        move(GameState-computer2, Mv, NewState),
-        value(NewState, blue, Value) ), [V|_]),
-    findall(Mv, NewState^( member(Mv, Moves),
-        move(GameState-computer2, Mv, NewState),
-        value(NewState, blue, V) ), GoodMoves),
-    random_select(Move,GoodMoves,_Rest),
-    nl, write('Computer2 (greedy) chose move: '), write(Move), nl.
-    
-valid_moves(GameState-Player, Moves) :-
+valid_moves(GameState-Player-Variant, Moves) :-
     findall(Move, (
         within_range(Move,GameState),
-        move(GameState-Player, Move, NewState)  % No trailing comma here!
+        move(GameState-Player-Variant, Move, NewState)  % No trailing comma here!
     ), Moves).
 
-get_move(Move):-
-    write('Enter move (x1-y1-x2-y2): '), nl,
+choose_move(GameState-computer1-Variant,1, Move) :-
+    valid_moves(GameState-computer1-Variant, Moves),
+    random_select(Move, Moves, _Rest),
+    inverse_transform_move(Move, TransformedMove),
+    nl, write('Red Computer (random) chose move: '), write(TransformedMove), nl.
+
+choose_move(GameState-computer1-Variant,2, Move):-
+    valid_moves(GameState-computer1-Variant, Moves),
+    setof(Value, NewState^Mv^( member(Mv, Moves),
+        move(GameState-computer1-Variant, Mv, NewState),
+        value(NewState, red, Value) ), [V|_]),
+    findall(Mv, NewState^( member(Mv, Moves),
+        move(GameState-computer1-Variant, Mv, NewState),
+        value(NewState, red, V) ), GoodMoves),
+    random_select(Move,GoodMoves,_Rest),
+    inverse_transform_move(Move, TransformedMove),
+    nl, write('Red Computer (greedy) chose move: '), write(TransformedMove), nl.
+
+choose_move(GameState-computer2-Variant,1, Move) :-
+    valid_moves(GameState-computer2-Variant, Moves),
+    random_select(Move, Moves, _Rest),
+    inverse_transform_move(Move, TransformedMove),
+    nl, write('Blue Computer (random) chose move: '), write(TransformedMove), nl.
+
+choose_move(GameState-computer2-Variant,2, Move):-
+    valid_moves(GameState-computer2-Variant, Moves),
+    setof(Value, NewState^Mv^( member(Mv, Moves),
+        move(GameState-computer2-Variant, Mv, NewState),
+        value(NewState, blue, Value) ), [V|_]),
+    findall(Mv, NewState^( member(Mv, Moves),
+        move(GameState-computer2-Variant, Mv, NewState),
+        value(NewState, blue, V) ), GoodMoves),
+    random_select(Move,GoodMoves,_Rest),
+    inverse_transform_move(Move, TransformedMove),
+    nl, write('Blue Computer (greedy) chose move: '), write(TransformedMove), nl.
+
+inverse_transform_move(StartColNum-StartRowNum-EndColNum-EndRowNum, Start-End) :-
+    num_to_col(StartColNum, StartCol),
+    num_to_col(EndColNum, EndCol),
+    number_codes(StartRowNum, [StartRowCode]),
+    number_codes(EndRowNum, [EndRowCode]),
+    char_code(StartRowChar, StartRowCode),
+    char_code(EndRowChar, EndRowCode),
+    atom_chars(Start, [StartCol, StartRowChar]),
+    atom_chars(End, [EndCol, EndRowChar]).
+
+num_to_col(Num, Col) :-
+    Code is Num + 96, % 1 -> 'a'
+    char_code(Col, Code).
+
+
+get_move(Move) :-
+    nl, write('Enter move (e.g., b1-c3): '), nl,
     catch(read(InputMove), _, (nl, write('Read error. This may cause the next reads to fail.'), nl, fail)),
-    validate_move_format(InputMove, ValidMove),
-    Move = ValidMove.
+    validate_move_format(InputMove),
+    transform_move(InputMove, TransformedMove),
+    Move = TransformedMove.
 
-validate_move_format(Move, ValidMove) :-
-    is_valid_format(Move),
-    !,
-    ValidMove = Move.
+validate_move_format(Start-End) :-
+    atom_chars(Start, StartChars), % Posição inicial
+    atom_chars(End, EndChars),     % Posição final
+    validate_position_format(StartChars),
+    validate_position_format(EndChars).
 
-validate_move_format(_, ValidMove) :-
-    write('Invalid move format. Please enter move in format x1-y1-x2-y2.'), nl,
-    get_move(ValidMove).
+validate_position_format([Col|RowChars]) :-
+    char_code(Col, ColCode),
+    ColCode >= 97, ColCode =< 122, % coluna é uma letra
+    maplist(char_code, RowChars, RowCodes),
+    maplist(between(48, 57), RowCodes). % linha é um número
 
-is_valid_format(X1-Y1-X2-Y2) :-
-    integer(X1), integer(Y1), integer(X2), integer(Y2).
+transform_move(Start-End, StartColNum-StartRowNum-EndColNum-EndRowNum) :-
+    atom_chars(Start, [StartCol|StartRowChars]), % Separar coluna e linha
+    atom_chars(End, [EndCol|EndRowChars]),       % Separar coluna e linha
+    col_to_num(StartCol, StartColNum),
+    col_to_num(EndCol, EndColNum),
+    maplist(char_code, StartRowChars, StartRowCodes),
+    maplist(char_code, EndRowChars, EndRowCodes),
+    number_codes(StartRowNum, StartRowCodes), % Converter string para número
+    number_codes(EndRowNum, EndRowCodes).     % Converter string para número
+
+col_to_num(Col, Num) :-
+    char_code(Col, Code),
+    Num is Code - 96. % 'a' -> 1
 
