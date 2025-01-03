@@ -2,6 +2,7 @@
 :- use_module(library(random)).
 :- use_module(library(between)).
 
+
 :- consult('interface.pl').
 
 initial_state(GameMode-Size, Board-Player):-
@@ -421,11 +422,6 @@ choose_move(GameState-player1-Variant,Level, Move):-
 choose_move(GameState-player2-Variant,Level, Move):-
     get_move(Move).
 
-valid_moves(GameState-Player-Variant, Moves) :-
-    findall(Move, (
-        within_range(Move,GameState),
-        move(GameState-Player-Variant, Move, NewState)  % No trailing comma here!
-    ), Moves).
 
 within_range(Move,GameState) :-
     length(GameState, Size),
@@ -436,7 +432,33 @@ within_range(Move,GameState) :-
     between(1, Size1, ToY),
     Move = FromX-FromY-ToX-ToY.
     
+value(GameState, red, Value):-
+    ratio_surrounding_color(GameState, red, NumRed),
+    ratio_surrounding_color(GameState, blue, NumBlue),
+    Value is NumRed - NumBlue.
 
+value(GameState, blue, Value):-
+    ratio_surrounding_color(GameState, red, NumRed),
+    ratio_surrounding_color(GameState, blue, NumBlue),
+    Value is NumBlue - NumRed.
+
+ratio_surrounding_color(GameState, Color, Num):-
+    findall(Ratio,(
+            get_piece(GameState,C-L,Color),
+            adjacent_stones(GameState, C-L, Stones),
+            findall(Emp, (member(empty,Stones)), Empties),
+            length(Empties,LenEmpt),
+            length(Stones, LenTot),
+            Ratio is LenEmpt/LenTot),Ratios
+    ),
+    sumlist(Ratios,NumSimetric),
+    Num is - NumSimetric.
+
+valid_moves(GameState-Player-Variant, Moves) :-
+    findall(Move, (
+        within_range(Move,GameState),
+        move(GameState-Player-Variant, Move, NewState)  % No trailing comma here!
+    ), Moves).
 
 choose_move(GameState-computer1-Variant,1, Move) :-
     valid_moves(GameState-computer1-Variant, Moves),
@@ -445,7 +467,14 @@ choose_move(GameState-computer1-Variant,1, Move) :-
     nl, write('Red Computer (random) chose move: '), write(TransformedMove), nl.
 
 choose_move(GameState-computer1-Variant,2, Move):-
-    greedy_move(GameState, Move),
+    valid_moves(GameState-computer1-Variant, Moves),
+    setof(Value, NewState^Mv^( member(Mv, Moves),
+        move(GameState-computer1-Variant, Mv, NewState),
+        value(NewState, red, Value) ), [V|_]),
+    findall(Mv, NewState^( member(Mv, Moves),
+        move(GameState-computer1-Variant, Mv, NewState),
+        value(NewState, red, V) ), GoodMoves),
+    random_select(Move,GoodMoves,_Rest),
     inverse_transform_move(Move, TransformedMove),
     nl, write('Red Computer (greedy) chose move: '), write(TransformedMove), nl.
 
@@ -456,7 +485,14 @@ choose_move(GameState-computer2-Variant,1, Move) :-
     nl, write('Blue Computer (random) chose move: '), write(TransformedMove), nl.
 
 choose_move(GameState-computer2-Variant,2, Move):-
-    greedy_move(GameState, Move),
+    valid_moves(GameState-computer2-Variant, Moves),
+    setof(Value, NewState^Mv^( member(Mv, Moves),
+        move(GameState-computer2-Variant, Mv, NewState),
+        value(NewState, blue, Value) ), [V|_]),
+    findall(Mv, NewState^( member(Mv, Moves),
+        move(GameState-computer2-Variant, Mv, NewState),
+        value(NewState, blue, V) ), GoodMoves),
+    random_select(Move,GoodMoves,_Rest),
     inverse_transform_move(Move, TransformedMove),
     nl, write('Blue Computer (greedy) chose move: '), write(TransformedMove), nl.
 
