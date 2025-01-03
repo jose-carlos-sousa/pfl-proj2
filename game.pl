@@ -402,7 +402,7 @@ choose_move(GameState-computer1,2, Move):-
     findall(Mv, NewState^( member(Mv, Moves),
         move(GameState-computer1, Mv, NewState),
         evaluate_board(NewState, V,red) ),GoodMoves ),
-    random_select(Move,GoodMoves,_Rest).
+    random_select(Move,GoodMoves,_Rest),
     nl, write('Computer1 (greedy) chose move: '), write(Move), nl.
 choose_move(GameState-computer2,1, Move) :-
     valid_moves(GameState-computer2, Moves),
