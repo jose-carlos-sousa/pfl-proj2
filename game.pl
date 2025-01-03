@@ -421,16 +421,6 @@ choose_move(GameState-player1-Variant,Level, Move):-
     get_move(Move).
 choose_move(GameState-player2-Variant,Level, Move):-
     get_move(Move).
-
-
-within_range(Move,GameState) :-
-    length(GameState, Size),
-    Size1 is Size + 1,
-    between(1, Size1, FromX),
-    between(1, Size1, FromY),
-    between(1, Size1, ToX),
-    between(1, Size1, ToY),
-    Move = FromX-FromY-ToX-ToY.
     
 value(GameState, red, Value):-
     ratio_surrounding_color(GameState, red, NumRed),
@@ -453,6 +443,14 @@ ratio_surrounding_color(GameState, Color, Num):-
     ),
     sumlist(Ratios,NumSimetric),
     Num is - NumSimetric.
+
+within_range(Move,GameState) :-
+    length(GameState, Size),
+    between(1, Size, FromX),
+    between(1, Size, FromY),
+    between(1, Size, ToX),
+    between(1, Size, ToY),
+    Move = FromX-FromY-ToX-ToY.
 
 valid_moves(GameState-Player-Variant, Moves) :-
     findall(Move, (
