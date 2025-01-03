@@ -18,13 +18,14 @@ initial_board(Size,Board):-
     init_board(Size, Board).
 
 get_board_size(ValidSize):-
-    write('Enter board size (even number greater than 2):'), nl,
+    write('Enter board size (even number between 4 and 26):'), nl,
     catch(read(Size), _, (write('Read error. This may cause the next reads to fail.'), nl, get_board_size(Size))),
     validate_size(Size, ValidSize).
 
 validate_size(Size, ValidSize) :-
     integer(Size),
-    Size > 2,
+    Size >= 4,
+    Size =< 26,
     Size mod 2 =:= 0,
     !,
     ValidSize = Size.

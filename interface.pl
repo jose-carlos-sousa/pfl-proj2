@@ -25,7 +25,14 @@ display_colored_player(Player) :-
 
 display_board(Board) :-
     length(Board, Size),
+    Size < 10,
     display_column_labels(Size),
+    display_board_rows(Board, Size).
+
+display_board(Board) :-
+    length(Board, Size),
+    Size >= 10,
+    display_column_labels_big(Size),
     display_board_rows(Board, Size).
 
 
@@ -34,6 +41,10 @@ display_column_labels(Size) :-
     display_columns(0, Size),
     nl.
 
+display_column_labels_big(Size) :-
+    write('    '), % Spacing for row labels
+    display_columns(0, Size),
+    nl.
 
 display_columns(Col, Size) :-
     Col < Size,
@@ -45,16 +56,38 @@ display_columns(_, _).
 
 
 display_board_rows(Board, Size) :-
+    Size < 10,
     reverse(Board, ReversedBoard),
     display_board_rows_reversed(ReversedBoard, Size, Size).
 
+display_board_rows(Board, Size) :-
+    Size >= 10,
+    reverse(Board, ReversedBoard),
+    display_board_rows_reversed_big(ReversedBoard, Size, Size).
+
 display_board_rows_reversed([], _, _).
 display_board_rows_reversed([Row | Rest], RowNum, Size) :-
-    format('~w |', [RowNum]), % Row label
+    format('~w |', [RowNum]),
     display_row(Row),
     nl,
     NextRowNum is RowNum - 1,
     display_board_rows_reversed(Rest, NextRowNum, Size).
+
+display_board_rows_reversed_big([], _, _).
+display_board_rows_reversed_big([Row | Rest], RowNum, Size) :-
+    RowNum >= 10,
+    format('~w |', [RowNum]),
+    display_row(Row),
+    nl,
+    NextRowNum is RowNum - 1,
+    display_board_rows_reversed_big(Rest, NextRowNum, Size).
+display_board_rows_reversed_big([Row | Rest], RowNum, Size) :-
+    RowNum < 10,
+    format('~w  |', [RowNum]),
+    display_row(Row),
+    nl,
+    NextRowNum is RowNum - 1,
+    display_board_rows_reversed_big(Rest, NextRowNum, Size).
 
 display_row([]).
 display_row([Cell | Rest]) :-
