@@ -116,6 +116,13 @@ get_piece(GameState, C-L, Piece):-
     nth1(L, GameState, Row),
     nth1(C, Row, Piece).
 
+%helper predicate that finds all the pieces of a given player in the board
+find_player_pieces(GameState, Player, Coordinates) :-
+    findall(C-L, (
+        nth1(L, GameState, Row),
+        nth1(C, Row, Player)
+    ), Coordinates).
+
 %helper predicate that updates the board by setting a place(C-L) to a desired piece
 set_piece(GameState, C-L, Piece, NewGameState):-
     nth1(L, GameState, Row),

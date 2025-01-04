@@ -19,7 +19,6 @@ play:-
     get_game_mode(GameMode),
     get_board_size(Size),
     initial_state(GameMode-Size, GameState-Player-NextPlayer-Variant),
-    write(GameState),
     display_game(GameState-Player-NextPlayer-Variant),
     game_cycle(GameState-Player-NextPlayer-Variant, GameMode).
 
@@ -95,7 +94,7 @@ move(+GameState, +Move, -NewGameState) given the current game state and a move C
 
 */
 move(GameState-Player-_-Variant, C1-L1-C2-L2, NewGameState):-
-    check_move(GameState-Player, C1-L1-C2-L2),!,
+    check_move(GameState-Player, C1-L1-C2-L2),
     get_piece(GameState, C1-L1, Piece),
     set_piece(GameState, C1-L1, black, TempGameState),
     set_piece(TempGameState, C2-L2, Piece, TempGameState2),
@@ -197,7 +196,8 @@ value(GameState, Player, Value):-
 
 valid_moves(GameState-Player-_-Variant, Moves) :-
     findall(Move, (
-        within_range(Move,GameState),
-        check_move(GameState-Player, Move)
+        generate_moves(GameState, Player, Move),
+        check_move(GameState-Player, Move),
+        write('Found move: '), write(Move), nl
     ), Moves).
 

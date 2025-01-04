@@ -90,7 +90,7 @@ check_move(GameState-Player,Move):-
     player_has_piece(GameState-Player, Move),
     is_destination_empty(GameState,Move),
     valid_direction(Move),
-    path_is_clear(GameState, Move),!.
+    path_is_clear(GameState, Move), !.
     
 %checks if direction is either horizontal,vertical or diagonal 
 valid_direction(C1-L1-C2-L2):-
@@ -154,11 +154,14 @@ ratio_surrounding_color(GameState, Color, Num):-
     sumlist(Ratios,NumSimetric),
     Num is - NumSimetric.
 
-%checks if a move is in board range
-within_range(Move,GameState) :-
+%generates moves for a given player
+generate_moves(GameState, Player, Move) :-
+    player_piece(Color, Player),
+    find_player_pieces(GameState, Color, Coordinates),
+    member(C1-L1, Coordinates),
     length(GameState, Size),
-    between(1, Size, FromX),
-    between(1, Size, FromY),
-    between(1, Size, ToX),
-    between(1, Size, ToY),
-    Move = FromX-FromY-ToX-ToY.
+    between(1, Size, C2),
+    between(1, Size, L2),
+    dif(C1-L1, C2-L2),
+    Move = C1-L1-C2-L2.
+
