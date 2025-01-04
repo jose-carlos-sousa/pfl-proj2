@@ -5,14 +5,52 @@
 
 :- consult('interface.pl').
 
-initial_state(GameMode-Size, Board-Player):-
-    initial_board(Size,Board),
-    initial_player(GameMode, Player).
+%play/0 initial predicate, gives access to game menu
+%allows you to choose game type and board size
 
-initial_player(1, player1).
-initial_player(2, player1).
-initial_player(3, computer1).
-initial_player(4, computer1).
+play:-
+    get_game_mode(GameMode),
+    get_board_size(Size),
+    initial_state(GameMode-Size, GameState-Player-NextPlayer-Variant),
+    display_game(GameState-Player-NextPlayer-Variant),
+    game_cycle(GameState-Player-NextPlayer-Variant, GameMode).
+
+
+
+%initial_state(+GameConfig, -GameState)
+%takes as input GameConfig with the specified mode and board size and outputs the initial gamestate
+initial_state(GameMode-Size, Board-Player-NextPlayer-Variant):-
+    initial_board(Size,Board),
+    initial_players(GameMode, Player,NextPlayer),
+    get_variant(Variant).
+
+get_ai_player(1,second,computer2_easy).
+get_ai_player(2,second,computer2_hard).
+get_ai_player(1,first,computer1_easy).
+get_ai_player(2,first,computer1_hard).
+
+initial_players(1, player1,player2):- !.
+initial_players(2,player1,Computer):-
+    get_AI_level(X),
+    get_ai_player(X,second,Computer).
+
+
+initial_players(3,Computer,player2):-
+    get_AI_level(X),
+    get_ai_player(X,first,Computer).
+
+initial_players(4,Computer1,Computer2):-
+    get_AI_level(X),
+    get_ai_player(X,first,Computer1),
+    get_ai_player(X,second,Computer2).
+    
+
+level_of_ai(player1,na).
+level_of_ai(player2,na).
+level_of_ai(computer1_easy,1).
+level_of_ai(computer1_hard,2).
+level_of_ai(computer2_easy,1).
+level_of_ai(computer2_hard,2).
 
 initial_board(Size,Board):-
     init_board(Size, Board).
@@ -80,7 +118,7 @@ init_board_cell(X,Size, blue,Size) :-
     X < Size,
     X mod 2 =:= 1,!.
 
-init_board_cell(X,Y, empty,Size).
+init_board_cell(_,_, empty,_).
 
 get_variant(Variant):-
     write('Choose variant:'), nl,
@@ -129,55 +167,23 @@ validate_AI(_, Level) :-
     nl, write('Invalid AI level chosen.'), nl, nl,
     get_AI_level(Level).
 
-play:-
-    get_game_mode(GameMode),
-    get_variant(Variant),
-    get_board_size(Size),
-    play(GameMode,Variant,Size).
 
-% pessoas reais
-play(1,Variant, Size):-
-    initial_state(1-Size, GameState-Player),
-    display_game(GameState-Player),
-    game_cycle(GameState-Player-Variant, _, 1).
-
-% computador vai em segundo
-play(2,Variant, Size):-
-    get_AI_level(Level),
-    initial_state(2-Size, GameState-Player),
-    display_game(GameState-Player),
-    game_cycle(GameState-Player-Variant, Level, 2).
-
-% computador vai em primeiro
-play(3,Variant, Size):-
-    get_AI_level(Level),
-    initial_state(3-Size, GameState-Player),
-    display_game(GameState-Player),
-    game_cycle(GameState-Player-Variant, Level, 3).
-
-% trabalhar nesta opção depois
-play(4,Variant, Size):-
-    get_AI_level(Level),
-    initial_state(4-Size, GameState-Player),
-    display_game(GameState-Player),
-    game_cycle(GameState-Player-Variant, Level, 4).
-
-game_cycle(GameState-Player-Variant,Level,GameMode):-
+game_cycle(GameState-Player-_-_,GameMode):-
     game_over(GameState-Player, Winner), !,
     congratulate(Winner).
-game_cycle(GameState-Player-Variant,Level,GameMode):-
-    choose_move(GameState-Player-Variant,Level, Move),
-    move(GameState-Player-Variant, Move, NewGameState),
-    next_player(GameMode, Player, NextPlayer), % could be done in move/3
-    display_game(NewGameState-NextPlayer),
-    game_cycle(NewGameState-NextPlayer-Variant,Level,GameMode).
+game_cycle(GameState-Player-NextPlayer-Variant,GameMode):-
+    level_of_ai(Player, Level),
+    choose_move(GameState-Player-NextPlayer-Variant,Level, Move),
+    move(GameState-Player-_-Variant, Move, NewGameState),
+    display_game(NewGameState-NextPlayer-Player-Variant),
+    game_cycle(NewGameState-NextPlayer-Player-Variant,GameMode).
 
-game_cycle(GameState-Player-Variant,Level,GameMode):-
-    display_game(GameState-Player),
-    game_cycle(GameState-Player-Variant,Level,GameMode).
+game_cycle(GameState-Player-NextPlayer-Variant,GameMode):-
+    display_game(GameState-Player-NextPlayer-Variant),
+    game_cycle(GameState-Player-NextPlayer-Variant,GameMode).
 
 % basicamente vemos se o move é válido e se vamos buscar a peça , metemos uma preta no sitio dela, e depois metemos a peça no sitio de destino
-move(GameState-Player-Variant, C1-L1-C2-L2, NewGameState):-
+move(GameState-Player-_-Variant, C1-L1-C2-L2, NewGameState):-
     check_move(GameState-Player, C1-L1-C2-L2),
     !,
     get_piece(GameState, C1-L1, Piece),
@@ -186,22 +192,15 @@ move(GameState-Player-Variant, C1-L1-C2-L2, NewGameState):-
     remove_blocked_stones(Variant,TempGameState2, TempGameState3),
     NewGameState = TempGameState3.
 
-move(GameState-Player-Variant, _, GameState):- fail.
+move(GameState-_-_-_, _, GameState):- fail.
 
-next_player(1,player1, player2).
-next_player(1,player2, player1).
-next_player(2,player1, computer2).
-next_player(2,computer2, player1).
-next_player(3,computer1, player2).
-next_player(3,player2, computer1).
-next_player(4,computer1, computer2).
-next_player(4,computer2, computer1).
+
 
 check_move(GameState-Player, Move):-
     player_has_piece(GameState-Player, Move),
     valid_queen_move(GameState, Move),
     is_destination_empty(GameState, Move).
-player_has_piece(GameState-Player, C1-L1-C2-L2):-
+player_has_piece(GameState-Player, C1-L1-_-_):-
     get_piece(GameState, C1-L1, Piece),
     player_piece(Piece, Player).
 
@@ -270,16 +269,16 @@ remove_blocked_stones_helper(Variant,C-L, C2-L2, GameState,GameStateAcc, NextGam
 next_position(C-L, C-L2, NextC-NextL):-
     NextL is L + 1,
     NextC is 1.
-next_position(C-L, C2-L2, NextC-NextL):-
+next_position(C-L, _-_, NextC-NextL):-
     NextC is C + 1,
     NextL is L.
     
 
 % se o atual for empty  eu n mudo
-remove_blocked_stones_piece(Variant,GameState,GameAcc,C-L, GameAcc):-
+remove_blocked_stones_piece(_,GameState,GameAcc,C-L, GameAcc):-
     get_piece(GameState, C-L, empty), !.
 
-remove_blocked_stones_piece(Variant,GameState,GameAcc,C-L, GameAcc):-
+remove_blocked_stones_piece(_,GameState,GameAcc,C-L, GameAcc):-
     get_piece(GameState, C-L, black), !.
 
 remove_blocked_stones_piece(1, GameState,GameAcc,C-L, NewGameState ):-
@@ -372,9 +371,11 @@ get_piece(GameState, C-L, Piece):-
     nth1(L, GameState, Row),
     nth1(C, Row, Piece).
 player_piece(red, player1).
-player_piece(red, computer1).
+player_piece(red, computer1_easy).
+player_piece(red, computer1_hard).
 player_piece(blue, player2).
-player_piece(blue, computer2).
+player_piece(blue, computer2_easy).
+player_piece(blue, computer2_hard).
 
 game_over(GameState-Player, Winner):-
     there_are_blue_left(GameState),
@@ -398,9 +399,10 @@ game_over(GameState-Player, Winner):-
 
 get_draw_winner(player1, blue).
 get_draw_winner(player2, red).
-get_draw_winner(computer1, blue).
-get_draw_winner(computer2, red).
-
+get_draw_winner(computer1_easy, blue).
+get_draw_winner(computer1_hard, blue).
+get_draw_winner(computer2_easy, red).
+get_draw_winner(computer2_hard, red).
 
 there_are_blue_left([]):- fail.
 there_are_blue_left([CurRow|OtherRows]):-
@@ -418,9 +420,9 @@ there_are_red_left([CurRow|OtherRows]):-
 
 
 % interaction to select move
-choose_move(GameState-player1-Variant,Level, Move):-
+choose_move(GameState-player1-_-Variant,Level, Move):-
     get_move(Move).
-choose_move(GameState-player2-Variant,Level, Move):-
+choose_move(GameState-player2-_-Variant,Level, Move):-
     get_move(Move).
     
 value(GameState, red, Value):-
@@ -453,43 +455,43 @@ within_range(Move,GameState) :-
     between(1, Size, ToY),
     Move = FromX-FromY-ToX-ToY.
 
-valid_moves(GameState-Player-Variant, Moves) :-
+valid_moves(GameState-Player-_-Variant, Moves) :-
     findall(Move, (
         within_range(Move,GameState),
-        move(GameState-Player-Variant, Move, NewState)  % No trailing comma here!
+        move(GameState-Player-_-Variant, Move, NewState)  % No trailing comma here!
     ), Moves).
 
-choose_move(GameState-computer1-Variant,1, Move) :-
-    valid_moves(GameState-computer1-Variant, Moves),
+choose_move(GameState-computer1_easy-_-Variant,1, Move) :-
+    valid_moves(GameState-computer1_easy-_-Variant, Moves),
     random_select(Move, Moves, _Rest),
     inverse_transform_move(Move, TransformedMove),
     nl, write('Red Computer (random) chose move: '), write(TransformedMove), nl.
 
-choose_move(GameState-computer1-Variant,2, Move):-
-    valid_moves(GameState-computer1-Variant, Moves),
+choose_move(GameState-computer1_hard-_-Variant,2, Move):-
+    valid_moves(GameState-computer1_hard-_-Variant, Moves),
     setof(Value, NewState^Mv^( member(Mv, Moves),
-        move(GameState-computer1-Variant, Mv, NewState),
+        move(GameState-computer1_hard-_-Variant, Mv, NewState),
         value(NewState, red, Value) ), [V|_]),
     findall(Mv, NewState^( member(Mv, Moves),
-        move(GameState-computer1-Variant, Mv, NewState),
+        move(GameState-computer1_hard-_-Variant, Mv, NewState),
         value(NewState, red, V) ), GoodMoves),
     random_select(Move,GoodMoves,_Rest),
     inverse_transform_move(Move, TransformedMove),
     nl, write('Red Computer (greedy) chose move: '), write(TransformedMove), nl.
 
-choose_move(GameState-computer2-Variant,1, Move) :-
-    valid_moves(GameState-computer2-Variant, Moves),
+choose_move(GameState-computer2_easy-_-Variant,1, Move) :-
+    valid_moves(GameState-computer2_easy-_-Variant, Moves),
     random_select(Move, Moves, _Rest),
     inverse_transform_move(Move, TransformedMove),
     nl, write('Blue Computer (random) chose move: '), write(TransformedMove), nl.
 
-choose_move(GameState-computer2-Variant,2, Move):-
-    valid_moves(GameState-computer2-Variant, Moves),
+choose_move(GameState-computer2_hard-_-Variant,2, Move):-
+    valid_moves(GameState-computer2_hard-_-Variant, Moves),
     setof(Value, NewState^Mv^( member(Mv, Moves),
-        move(GameState-computer2-Variant, Mv, NewState),
+        move(GameState-computer2_hard-_-Variant, Mv, NewState),
         value(NewState, blue, Value) ), [V|_]),
     findall(Mv, NewState^( member(Mv, Moves),
-        move(GameState-computer2-Variant, Mv, NewState),
+        move(GameState-computer2_hard-_-Variant, Mv, NewState),
         value(NewState, blue, V) ), GoodMoves),
     random_select(Move,GoodMoves,_Rest),
     inverse_transform_move(Move, TransformedMove),
