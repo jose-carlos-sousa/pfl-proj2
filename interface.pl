@@ -169,11 +169,11 @@ validate_mode(_, GameMode) :-
     nl, write('Invalid mode chosen.'), nl, nl,
     get_game_mode(GameMode).
 
-get_AI_level(Level):-
+get_ai_level(Level):-
     write('Choose AI level:'), nl,
     write('1. Random'), nl,
     write('2. Greedy'), nl,
-    catch(read(AI), _, (write('Read error. This may cause the next reads to fail.'), nl, get_AI_level(AI))),
+    catch(read(AI), _, (write('Read error. This may cause the next reads to fail.'), nl, get_ai_level(AI))),
     validate_AI(AI, Level).
 validate_AI(AI, Level) :-
     member(AI, [1, 2]),
@@ -181,7 +181,7 @@ validate_AI(AI, Level) :-
     Level = AI.
 validate_AI(_, Level) :-
     nl, write('Invalid AI level chosen.'), nl, nl,
-    get_AI_level(Level).
+    get_ai_level(Level).
 
 
 get_move(Move) :-

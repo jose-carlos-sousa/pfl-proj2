@@ -31,16 +31,16 @@ get_ai_player(2,first,computer1_hard).
 
 initial_players(1, player1,player2):- !.
 initial_players(2,player1,Computer):-
-    get_AI_level(X),
+    get_ai_level(X),
     get_ai_player(X,second,Computer).
 
 
 initial_players(3,Computer,player2):-
-    get_AI_level(X),
+    get_ai_level(X),
     get_ai_player(X,first,Computer).
 
 initial_players(4,Computer1,Computer2):-
-    get_AI_level(X),
+    get_ai_level(X),
     get_ai_player(X,first,Computer1),
     get_ai_player(X,second,Computer2).
     
@@ -84,7 +84,7 @@ initial_board_cell(_,_, empty,_).
 
 
 game_cycle(GameState-Player-_-_,GameMode):-
-    game_over(GameState-Player, Winner), !,
+    game_over(GameState-Player-_-_, Winner), !,
     congratulate(Winner).
 game_cycle(GameState-Player-NextPlayer-Variant,GameMode):-
     level_of_ai(Player, Level),
@@ -292,22 +292,22 @@ player_piece(blue, player2).
 player_piece(blue, computer2_easy).
 player_piece(blue, computer2_hard).
 
-game_over(GameState-Player, Winner):-
+game_over(GameState-Player-_-_, Winner):-
     there_are_blue_left(GameState),
     there_are_red_left(GameState),
     fail.
 
-game_over(GameState-Player, Winner):-
+game_over(GameState-Player-_-_, Winner):-
     there_are_blue_left(GameState), 
     \+ there_are_red_left(GameState),
     Winner = blue.
 
-game_over(GameState-Player, Winner):-
+game_over(GameState-Player-_-_, Winner):-
     there_are_red_left(GameState), 
     \+ there_are_blue_left(GameState),
     Winner = red.
 
-game_over(GameState-Player, Winner):-
+game_over(GameState-Player-_-_, Winner):-
     \+ there_are_red_left(GameState), 
     \+ there_are_blue_left(GameState),
     get_draw_winner(Player, Winner).
