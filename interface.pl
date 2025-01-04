@@ -1,3 +1,4 @@
+%displays the player whose turn it is
 display_player(Player):-
     nl, write('Player: '),
     display_colored_player(Player),
@@ -13,7 +14,7 @@ display_colored_player(Player) :-
     write('\e[0m'), nl.  
 
 
-
+%gives visual representation of the board matrix 
 display_board(Board) :-
     length(Board, Size),
     Size < 10,
@@ -112,13 +113,13 @@ congratulate(blue) :-
     write('\e[34mCongratulations, Blue!'),
     write('\e[0m'), nl, nl.
 
-
+%gets board size from user
 get_board_size(ValidSize):-
     write('Enter board size (even number between 4 and 26):'), nl,
     catch(read(Size), _, (write('Read error. This may cause the next reads to fail.'), nl, get_board_size(Size))),
     validate_size(Size, ValidSize).
 
-
+%validates board size
 validate_size(Size, ValidSize) :-
     integer(Size),
     Size >= 4,
@@ -131,7 +132,7 @@ validate_size(_, ValidSize) :-
     write('Invalid input.'), nl,
     get_board_size(ValidSize).
 
-
+%gets the variant the user wants to play
 get_variant(Variant):-
     write('Choose variant:'), nl,
     write('1. Standard'), nl,
@@ -148,6 +149,7 @@ validate_variant(_, Variant) :-
     nl, write('Invalid variant chosen.'), nl, nl,
     get_variant(Variant).
 
+%gets the game mode the user wants to play
 get_game_mode(GameMode):-
     write('Choose game mode:'), nl,
     write('1. Player vs Player'), nl,
@@ -165,6 +167,7 @@ validate_mode(_, GameMode) :-
     nl, write('Invalid mode chosen.'), nl, nl,
     get_game_mode(GameMode).
 
+%gets the ai level desired by the user
 get_ai_level(Level):-
     write('Choose AI level:'), nl,
     write('1. Random'), nl,
@@ -180,6 +183,7 @@ validate_AI(_, Level) :-
     get_ai_level(Level).
 
 
+%gets the move the user want to play in the format b1-c3 and trasnforms it to Move as it is represented internally C1-L1-C2-L2
 get_move(Move) :-
     nl, write('Enter move (e.g., b1-c3): '), nl,
     catch(read(InputMove), _, (nl, write('Read error. This may cause the next reads to fail.'), nl, fail)),
@@ -196,26 +200,26 @@ display_color(Player):-
     write('Blue').
 
 validate_move_format(Start-End) :-
-    atom_chars(Start, StartChars), % Posição inicial
-    atom_chars(End, EndChars),     % Posição final
+    atom_chars(Start, StartChars), % Initial Position
+    atom_chars(End, EndChars),     % Final Position
     validate_position_format(StartChars),
     validate_position_format(EndChars).
 
 validate_position_format([Col|RowChars]) :-
     char_code(Col, ColCode),
-    ColCode >= 97, ColCode =< 122, % coluna é uma letra
+    ColCode >= 97, ColCode =< 122, % Col is letter
     maplist(char_code, RowChars, RowCodes),
-    maplist(between(48, 57), RowCodes). % linha é um número
+    maplist(between(48, 57), RowCodes). % Row is number
 
 transform_move(Start-End, StartColNum-StartRowNum-EndColNum-EndRowNum) :-
-    atom_chars(Start, [StartCol|StartRowChars]), % Separar coluna e linha
-    atom_chars(End, [EndCol|EndRowChars]),       % Separar coluna e linha
+    atom_chars(Start, [StartCol|StartRowChars]), 
+    atom_chars(End, [EndCol|EndRowChars]),      
     col_to_num(StartCol, StartColNum),
     col_to_num(EndCol, EndColNum),
     maplist(char_code, StartRowChars, StartRowCodes),
     maplist(char_code, EndRowChars, EndRowCodes),
-    number_codes(StartRowNum, StartRowCodes), % Converter string para número
-    number_codes(EndRowNum, EndRowCodes).     % Converter string para número
+    number_codes(StartRowNum, StartRowCodes), 
+    number_codes(EndRowNum, EndRowCodes).     
 
 col_to_num(Col, Num) :-
     char_code(Col, Code),

@@ -19,6 +19,7 @@ play:-
     get_game_mode(GameMode),
     get_board_size(Size),
     initial_state(GameMode-Size, GameState-Player-NextPlayer-Variant),
+    write(GameState),
     display_game(GameState-Player-NextPlayer-Variant),
     game_cycle(GameState-Player-NextPlayer-Variant, GameMode).
 
