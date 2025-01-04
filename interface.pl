@@ -191,6 +191,14 @@ get_move(Move) :-
     transform_move(InputMove, TransformedMove),
     Move = TransformedMove.
 
+display_color(Player):-
+    player_piece(red,Player),
+    write('Red').
+
+display_color(Player):-
+    player_piece(blue,Player),
+    write('Blue').
+
 validate_move_format(Start-End) :-
     atom_chars(Start, StartChars), % Posição inicial
     atom_chars(End, EndChars),     % Posição final

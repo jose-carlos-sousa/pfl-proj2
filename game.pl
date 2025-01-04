@@ -99,19 +99,17 @@ game_cycle(GameState-Player-NextPlayer-Variant,GameMode):-
 
 % basicamente vemos se o move é válido e se vamos buscar a peça , metemos uma preta no sitio dela, e depois metemos a peça no sitio de destino
 move(GameState-Player-_-Variant, C1-L1-C2-L2, NewGameState):-
-    check_move(GameState-Player, C1-L1-C2-L2),
-    !,
+    check_move(GameState-Player, C1-L1-C2-L2),!,
     get_piece(GameState, C1-L1, Piece),
     set_piece(GameState, C1-L1, black, TempGameState),
     set_piece(TempGameState, C2-L2, Piece, TempGameState2),
     remove_blocked_stones(Variant,TempGameState2, TempGameState3),
     NewGameState = TempGameState3.
 
-move(GameState-_-_-_, _, GameState):- fail.
-
 
 
 check_move(GameState-Player, Move):-
+    within_range(Move,GameState),
     player_has_piece(GameState-Player, Move),
     valid_queen_move(GameState, Move),
     is_destination_empty(GameState, Move).
@@ -339,7 +337,29 @@ choose_move(GameState-player1-_-Variant,Level, Move):-
     get_move(Move).
 choose_move(GameState-player2-_-Variant,Level, Move):-
     get_move(Move).
-    
+
+choose_move(GameState-Player-_-Variant,1, Move) :-
+    write(GameState-Player-_-Variant),
+    valid_moves(GameState-Player-_-Variant, Moves),
+    random_select(Move, Moves, _Rest),
+    inverse_transform_move(Move, TransformedMove),
+    nl, display_color(Player) , write(' Computer (random) chose move: '), write(TransformedMove), nl.
+
+choose_move(GameState-Player-_-Variant,2, Move):-
+    valid_moves(GameState-Player-_-Variant, Moves),
+    setof(Value, NewState^Mv^( member(Mv, Moves),
+        move(GameState-Player-_-Variant, Mv, NewState),
+        value(NewState, Player, Value) ), [V|_]),
+    findall(Mv, NewState^( member(Mv, Moves),
+        move(GameState-Player-_-Variant, Mv, NewState),
+        value(NewState, Player, V) ), GoodMoves),
+    random_select(Move,GoodMoves,_Rest),
+    inverse_transform_move(Move, TransformedMove),
+    nl, display_color(Player), write(' Computer (greedy) chose move: '), write(TransformedMove), nl.
+
+
+
+
 value(GameState, Player, Value):-
     player_piece(red,Player),
     ratio_surrounding_color(GameState, red, NumRed),
@@ -374,43 +394,7 @@ within_range(Move,GameState) :-
 
 valid_moves(GameState-Player-_-Variant, Moves) :-
     findall(Move, (
-        within_range(Move,GameState),
-        move(GameState-Player-_-Variant, Move, NewState)  % No trailing comma here!
+        move(GameState-Player-_-Variant, Move, _)
+        ,nl , write(Move),nl  % No trailing comma here!
     ), Moves).
-
-choose_move(GameState-computer1_easy-_-Variant,1, Move) :-
-    valid_moves(GameState-computer1_easy-_-Variant, Moves),
-    random_select(Move, Moves, _Rest),
-    inverse_transform_move(Move, TransformedMove),
-    nl, write('Red Computer (random) chose move: '), write(TransformedMove), nl.
-
-choose_move(GameState-computer1_hard-_-Variant,2, Move):-
-    valid_moves(GameState-computer1_hard-_-Variant, Moves),
-    setof(Value, NewState^Mv^( member(Mv, Moves),
-        move(GameState-computer1_hard-_-Variant, Mv, NewState),
-        value(NewState, computer1_hard, Value) ), [V|_]),
-    findall(Mv, NewState^( member(Mv, Moves),
-        move(GameState-computer1_hard-_-Variant, Mv, NewState),
-        value(NewState, computer1_hard, V) ), GoodMoves),
-    random_select(Move,GoodMoves,_Rest),
-    inverse_transform_move(Move, TransformedMove),
-    nl, write('Red Computer (greedy) chose move: '), write(TransformedMove), nl.
-
-choose_move(GameState-computer2_easy-_-Variant,1, Move) :-
-    valid_moves(GameState-computer2_easy-_-Variant, Moves),
-    random_select(Move, Moves, _Rest),
-    inverse_transform_move(Move, TransformedMove),
-    nl, write('Blue Computer (random) chose move: '), write(TransformedMove), nl.
-
-choose_move(GameState-computer2_hard-_-Variant,2, Move):-
-    valid_moves(GameState-computer2_hard-_-Variant, Moves),
-    setof(Value, NewState^Mv^( member(Mv, Moves),
-        move(GameState-computer2_hard-_-Variant, Mv, NewState),
-        value(NewState, computer2_hard, Value) ), [V|_]),
-    findall(Mv, NewState^( member(Mv, Moves),
-        move(GameState-computer2_hard-_-Variant, Mv, NewState),
-        value(NewState, computer2_hard, V) ), GoodMoves),
-    random_select(Move,GoodMoves,_Rest),
-    inverse_transform_move(Move, TransformedMove),
-    nl, write('Blue Computer (greedy) chose move: '), write(TransformedMove), nl.
 
