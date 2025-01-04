@@ -110,9 +110,8 @@ move(GameState-Player-_-Variant, C1-L1-C2-L2, NewGameState):-
 
 check_move(GameState-Player, Move):-
     within_range(Move,GameState),
-    player_has_piece(GameState-Player, Move),
-    valid_queen_move(GameState, Move),
-    is_destination_empty(GameState, Move).
+    valid_queen_move(GameState, Move).
+
 player_has_piece(GameState-Player, C1-L1-_-_):-
     get_piece(GameState, C1-L1, Piece),
     player_piece(Piece, Player).
@@ -141,6 +140,7 @@ replace_pieces(GameState, C-L, C1-L1, Color1, Color2, NewGameState):-
 replace_pieces(GameState, C-L, C1-L1, Color1, Color2, NewGameState):-
     next_position(C-L, C1-L1, NextC-NextL),
     replace_pieces(GameState, NextC-NextL, C1-L1, Color1, Color2, NewGameState).
+
 replace(1, [_|T], X, [X|T]).
 replace(I, [H|T], X, [H|R]):-
     I > 1,
@@ -243,9 +243,12 @@ adjacent_black_stones_coordinates(GameState, C-L, Stones):-
             (   adjacent(C-L, C2-L2),                 % Get adjacent coordinates
                 get_piece(GameState, C2-L2, black)),   % Get the piece at the adjacent position
             Stones).
-valid_queen_move(GameState, C1-L1-C2-L2):-
-    valid_direction(C1-L1-C2-L2),
-    path_is_clear(GameState, C1-L1-C2-L2).
+valid_queen_move(GameState,Move):-
+    player_has_piece(GameState-Player, Move),
+    is_destination_empty(GameState,Move),
+    valid_direction(Move),
+    path_is_clear(GameState, Move).
+    
 valid_direction(C1-L1-C2-L2):-
     C1 =:= C2.
 valid_direction(C1-L1-C2-L2):-
@@ -276,6 +279,7 @@ next(L, L2, NextL):-
     L > L2, NextL is L - 1.
 next(L, L2, L):-
     L =:= L2.
+
 
 
 is_destination_empty(GameState, C1-L1-C2-L2):-
