@@ -158,9 +158,7 @@ choose_move(GameState-Player-_-Variant,1, Move) :-
     nl, display_color(Player) , write(' Computer (random) chose move: '), write(TransformedMove), nl.
 
 choose_move(GameState-Player-_-Variant,2, Move):-
-    write('Player'),
-    write(Player),
-    valid_moves(GameState-Player-_-Variant, Moves),nl,write('movces'),
+    valid_moves(GameState-Player-_-Variant, Moves),
     setof(Value, NewState^Mv^( member(Mv, Moves),
         move(GameState-Player-_-Variant, Mv, NewState),
         value(NewState, Player, Value) ), [V|_]),
