@@ -90,7 +90,7 @@ check_move(GameState-Player,Move):-
     player_has_piece(GameState-Player, Move),
     is_destination_empty(GameState,Move),
     valid_direction(Move),
-    path_is_clear(GameState, Move).
+    path_is_clear(GameState, Move),!.
     
 %checks if direction is either horizontal,vertical or diagonal 
 valid_direction(C1-L1-C2-L2):-

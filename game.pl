@@ -198,6 +198,6 @@ value(GameState, Player, Value):-
 valid_moves(GameState-Player-_-Variant, Moves) :-
     findall(Move, (
         within_range(Move,GameState),
-        move(GameState-Player-_-Variant, Move, _)
+        check_move(GameState-Player, Move)
     ), Moves).
 
