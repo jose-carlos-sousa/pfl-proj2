@@ -1,7 +1,3 @@
-display_game(GameState-Player-_-_):-
-    display_player(Player),
-    display_board(GameState).
-
 display_player(Player):-
     nl, write('Player: '),
     display_colored_player(Player),
