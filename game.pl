@@ -2,11 +2,10 @@
 :- use_module(library(random)).
 :- use_module(library(between)).
 
-
 :- consult('interface.pl').
 
 %play/0 initial predicate, gives access to game menu
-%allows you to choose game type and board size
+%allows you to choose game mode and board size
 
 play:-
     get_game_mode(GameMode),
@@ -19,6 +18,7 @@ play:-
 
 %initial_state(+GameConfig, -GameState)
 %takes as input GameConfig with the specified mode and board size and outputs the initial gamestate
+%the game state consists of Board 2D list , curplayer, nextplayer and variant
 initial_state(GameMode-Size, Board-Player-NextPlayer-Variant):-
     initial_board(Size,Board),
     initial_players(GameMode, Player,NextPlayer),
@@ -425,12 +425,14 @@ choose_move(GameState-player1-_-Variant,Level, Move):-
 choose_move(GameState-player2-_-Variant,Level, Move):-
     get_move(Move).
     
-value(GameState, red, Value):-
+value(GameState, Player, Value):-
+    player_piece(red,Player),
     ratio_surrounding_color(GameState, red, NumRed),
     ratio_surrounding_color(GameState, blue, NumBlue),
     Value is NumRed - NumBlue.
 
-value(GameState, blue, Value):-
+value(GameState, Player, Value):-
+    player_piece(blue,Player),
     ratio_surrounding_color(GameState, red, NumRed),
     ratio_surrounding_color(GameState, blue, NumBlue),
     Value is NumBlue - NumRed.
@@ -471,10 +473,10 @@ choose_move(GameState-computer1_hard-_-Variant,2, Move):-
     valid_moves(GameState-computer1_hard-_-Variant, Moves),
     setof(Value, NewState^Mv^( member(Mv, Moves),
         move(GameState-computer1_hard-_-Variant, Mv, NewState),
-        value(NewState, red, Value) ), [V|_]),
+        value(NewState, computer1_hard, Value) ), [V|_]),
     findall(Mv, NewState^( member(Mv, Moves),
         move(GameState-computer1_hard-_-Variant, Mv, NewState),
-        value(NewState, red, V) ), GoodMoves),
+        value(NewState, computer1_hard, V) ), GoodMoves),
     random_select(Move,GoodMoves,_Rest),
     inverse_transform_move(Move, TransformedMove),
     nl, write('Red Computer (greedy) chose move: '), write(TransformedMove), nl.
@@ -489,10 +491,10 @@ choose_move(GameState-computer2_hard-_-Variant,2, Move):-
     valid_moves(GameState-computer2_hard-_-Variant, Moves),
     setof(Value, NewState^Mv^( member(Mv, Moves),
         move(GameState-computer2_hard-_-Variant, Mv, NewState),
-        value(NewState, blue, Value) ), [V|_]),
+        value(NewState, computer2_hard, Value) ), [V|_]),
     findall(Mv, NewState^( member(Mv, Moves),
         move(GameState-computer2_hard-_-Variant, Mv, NewState),
-        value(NewState, blue, V) ), GoodMoves),
+        value(NewState, computer2_hard, V) ), GoodMoves),
     random_select(Move,GoodMoves,_Rest),
     inverse_transform_move(Move, TransformedMove),
     nl, write('Blue Computer (greedy) chose move: '), write(TransformedMove), nl.
