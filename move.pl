@@ -1,7 +1,6 @@
 
 check_move(GameState-Player, Move):-
-    within_range(Move,GameState),
-    valid_queen_move(GameState, Move).
+    valid_queen_move(GameState-Player, Move).
 
 
 remove_blocked_stones(Variant,[H|T], NewGameState):-
@@ -65,7 +64,7 @@ remove_all_black_neightbours(GameState, [C-L|OtherStones], NewBoard):-
 % Find all black pieces adjacent to a given position
 
 
-valid_queen_move(GameState,Move):-
+valid_queen_move(GameState-Player,Move):-
     player_has_piece(GameState-Player, Move),
     is_destination_empty(GameState,Move),
     valid_direction(Move),

@@ -1,4 +1,8 @@
+/*
 
+initial_board(+Size, -Board) Takes the Size of the Board and gives the Board
+
+*/
 initial_board(Size, Board) :-
     findall(Row,(between(1,Size,X), initial_board_row(X,Size,Row)),Board). 
 
