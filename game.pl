@@ -70,7 +70,9 @@ game_cycle(+GameState,+GameMode) defines the actions to be taken in a given turn
 */
 game_cycle(Board-Player-_-_,_):-
     game_over(Board-Player-_-_, Winner), !,
-    congratulate(Winner).
+    congratulate(Winner),
+    play_again(Res),!,
+    eval_play_again(Res).
 game_cycle(Board-Player-NextPlayer-Variant,GameMode):-
     level_of_ai(Player, Level),
     choose_move(Board-Player-NextPlayer-Variant,Level, Move),
