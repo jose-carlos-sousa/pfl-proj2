@@ -193,7 +193,7 @@ validate_AI(_, Level) :-
 get_move(Move) :-
     nl, write('Enter move (e.g., b1-c3): '), nl,
     catch(read(InputMove), _, (nl, write('Read error. This may cause the next reads to fail.'), nl, fail)),
-    catch(validate_move_format(InputMove), _, (nl, write('Invalid move format.'), nl, fail)),
+    catch(validate_move_format(InputMove), _, (nl, write('Invalid Move.'), nl, fail)),
     transform_move(InputMove, TransformedMove),
     Move = TransformedMove.
 
@@ -211,7 +211,7 @@ validate_move_format(Start-End) :-
     validate_position_format(StartChars),
     validate_position_format(EndChars).
 validate_move_format(_) :-
-    nl, write('Invalid move format.'), nl, fail.
+    nl, write('Invalid Move.'), nl, fail.
 
 validate_position_format([Col|RowChars]) :-
     char_code(Col, ColCode),

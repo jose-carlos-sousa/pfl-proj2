@@ -101,12 +101,6 @@ move(Board-Player-NextPlayer-Variant, C1-L1-C2-L2, NewBoard-NextPlayer-Player-Va
     remove_blocked_stones(Variant,TempBoard2, TempBoard3),
     NewBoard = TempBoard3.
 
-move(_-player1-_-_, _, _):-
-    nl, write('Invalid Move!'), nl,
-    fail.
-move(_-player2-_-_, _, _):-
-    nl, write('Invalid Move!'), nl,
-    fail.
 
 /*
 
