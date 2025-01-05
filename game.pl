@@ -72,7 +72,6 @@ game_cycle(Board-Player-_-_,_):-
     game_over(Board-Player-_-_, Winner), !,
     congratulate(Winner).
 game_cycle(Board-Player-NextPlayer-Variant,GameMode):-
-    write(Board-Player-NextPlayer-Variant),
     level_of_ai(Player, Level),
     choose_move(Board-Player-NextPlayer-Variant,Level, Move),
     move(Board-Player-NextPlayer-Variant, Move, NewGameState),
