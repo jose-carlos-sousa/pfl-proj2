@@ -144,3 +144,4 @@ there_are_red_left([CurRow|_]):-
 there_are_red_left([CurRow|OtherRows]):-
     \+ member(red, CurRow),
     there_are_red_left(OtherRows).
+

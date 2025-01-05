@@ -72,6 +72,7 @@ game_cycle(Board-Player-_-_,_):-
     game_over(Board-Player-_-_, Winner), !,
     congratulate(Winner).
 game_cycle(Board-Player-NextPlayer-Variant,GameMode):-
+    write(Board-Player-NextPlayer-Variant),
     level_of_ai(Player, Level),
     choose_move(Board-Player-NextPlayer-Variant,Level, Move),
     move(Board-Player-NextPlayer-Variant, Move, NewGameState),
@@ -203,3 +204,87 @@ value(Board, Player, Value):-
     piece_difference(Board, blue, red, Difference),
     Value is NumBlue - NumRed - 2 * Difference.
 
+/*
+
+Test States
+
+*/
+
+%use get_initial_state(State).
+get_initial_state(State):-
+        State = 
+        [[empty,empty,red,empty,red,empty],
+        [blue,empty,empty,empty,empty,empty],
+        [empty,empty,empty,empty,empty,blue],
+        [blue,empty,empty,empty,empty,empty],
+        [empty,empty,empty,empty,empty,blue],
+        [empty,red,empty,red,empty,empty]]-player1-player2-1.
+
+%move that kills blue piece is a7-a8.
+%display the state get_blue_piece_surrounded_v1(State),display_game(State).
+%use get_blue_piece_surrounded_v1(State),move(State,1-7-1-8,NewState),display_game(NewState).
+get_blue_piece_surrounded_v1(State):-
+    State =
+     [[empty,empty,red,empty,red,empty,red,empty],
+    [blue,empty,empty,empty,empty,empty,empty,empty],
+    [empty,empty,empty,empty,empty,empty,empty,blue],
+    [blue,empty,empty,empty,empty,empty,empty,empty],
+    [empty,empty,empty,empty,empty,empty,empty,blue],
+    [black,red,empty,empty,empty,empty,empty,empty],
+    [blue,black,empty,empty,empty,empty,empty,blue],
+    [empty,black,empty,red,empty,red,empty,empty]]-player2-player1-1.
+
+%use get_blue_piece_surrounded_v2(State),move(State,1-7-1-8,NewState),display_game(NewState).
+get_blue_piece_surrounded_v2(State):-
+    State =
+     [[empty,empty,red,empty,red,empty,red,empty],
+    [blue,empty,empty,empty,empty,empty,empty,empty],
+    [empty,empty,empty,empty,empty,empty,empty,blue],
+    [blue,empty,empty,empty,empty,empty,empty,empty],
+    [empty,empty,empty,empty,empty,empty,empty,blue],
+    [black,red,empty,empty,empty,empty,empty,empty],
+    [blue,black,empty,empty,empty,empty,empty,blue],
+    [empty,black,empty,red,empty,red,empty,empty]]-player2-player1-2.
+
+%use get_blue_piece_surrounded_v3(State),move(State,1-7-1-8,NewState),display_game(NewState).
+get_blue_piece_surrounded_v3(State):-
+    State =
+     [[empty,empty,red,empty,red,empty,red,empty],
+    [blue,empty,empty,empty,empty,empty,empty,empty],
+    [empty,empty,empty,empty,empty,empty,empty,blue],
+    [blue,empty,empty,empty,empty,empty,empty,empty],
+    [empty,empty,empty,empty,empty,empty,empty,blue],
+    [black,red,empty,empty,empty,empty,empty,empty],
+    [blue,black,empty,empty,empty,empty,empty,blue],
+    [empty,black,empty,red,empty,red,empty,empty]]-player2-player1-3.
+
+%use get_intermediate_state(State)
+get_intermediate_state(State):-
+    State= [[red,empty,black,empty,black,empty,black,empty],
+    [blue,black,black,empty,blue,red,blue,empty],
+    [empty,empty,empty,empty,black,empty,black,black],
+    [black,red,blue,black,black,black,black,empty],
+    [empty,empty,black,red,empty,black,empty,black],
+    [black,black,blue,black,black,black,empty,black],
+    [empty,black,black,black,empty,black,blue,black],
+    [empty,red,empty,black,empty,black,empty,red]]-computer2_hard-computer1_hard-2.
+
+%use get_end_state(State),move(State,4-4-3-4,FState),display_game(FState),game_over(FState,Winner).
+get_end_state(State):-
+    State = 
+    [[empty,black,black,empty,empty,empty],
+    [black,empty,empty,red,empty,empty],
+    [empty,black,black,black,black,empty],
+    [black,black,empty,blue,black,black],
+    [empty,black,black,black,black,black],
+    [black,black,empty,black,empty,red]]-computer2_hard-computer1_hard-2.
+
+%use get_end_draw_state(State), game_over(State,Winner).
+get_end_draw_state(State):-
+    State = 
+    [[empty,black,black,empty,empty,empty],
+    [black,empty,empty,empty,empty,empty],
+    [empty,black,black,black,black,empty],
+    [black,black,empty,empty,black,black],
+    [empty,black,black,black,black,black],
+    [black,black,empty,black,empty,empty]]-computer2_hard-computer1_hard-2.
