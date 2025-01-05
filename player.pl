@@ -6,18 +6,19 @@ Given gamemode gives player and nextplayer
 */
 initial_players(1, player1,player2):- !.
 initial_players(2,player1,Computer):-
-    get_ai_level(X),
+    get_second_ai_level(X),
     get_ai_player(X,second,Computer).
 
 
 initial_players(3,Computer,player2):-
-    get_ai_level(X),
+    get_first_ai_level(X),
     get_ai_player(X,first,Computer).
 
 initial_players(4,Computer1,Computer2):-
-    get_ai_level(X),
+    get_first_ai_level(X),
+    get_second_ai_level(Y),
     get_ai_player(X,first,Computer1),
-    get_ai_player(X,second,Computer2).
+    get_ai_player(Y,second,Computer2).
     
 %establishes connection between AI level turn and player
 get_ai_player(1,second,computer2_easy).

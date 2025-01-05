@@ -168,8 +168,14 @@ validate_mode(_, GameMode) :-
     get_game_mode(GameMode).
 
 %gets the ai level desired by the user
-get_ai_level(Level):-
-    write('Choose AI level:'), nl,
+get_first_ai_level(Level):-
+    write('Choose AI level for Red Computer:'), nl,
+    write('1. Random'), nl,
+    write('2. Greedy'), nl,
+    catch(read(AI), _, (write('Read error. This may cause the next reads to fail.'), nl, get_ai_level(AI))),
+    validate_AI(AI, Level).
+get_second_ai_level(Level):-
+    write('Choose AI level for Blue Computer:'), nl,
     write('1. Random'), nl,
     write('2. Greedy'), nl,
     catch(read(AI), _, (write('Read error. This may cause the next reads to fail.'), nl, get_ai_level(AI))),
