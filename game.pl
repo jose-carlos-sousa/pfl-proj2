@@ -100,6 +100,12 @@ move(GameState-Player-_-Variant, C1-L1-C2-L2, NewGameState):-
     set_piece(TempGameState, C2-L2, Piece, TempGameState2),
     remove_blocked_stones(Variant,TempGameState2, TempGameState3),
     NewGameState = TempGameState3.
+move(GameState-player1-_-Variant, C1-L1-C2-L2, NewGameState):-
+    nl, write(' Invalid Move!'), nl,
+    fail.
+move(GameState-player2-_-Variant, C1-L1-C2-L2, NewGameState):-
+    nl, write('Invalid Move!'), nl,
+    fail.
 
 /*
 
@@ -167,7 +173,7 @@ choose_move(GameState-Player-_-Variant,2, Move):-
         value(NewState, Player, V) ), GoodMoves),
     random_select(Move,GoodMoves,_Rest),
     inverse_transform_move(Move, TransformedMove),
-    nl, display_color(Player), write(' Computer (greedy) chose move: '), write(TransformedMove), nl.
+    nl, display_color(Player), write(' Computer (greedy) chose move: '), write(TransformedMove), write(' with value: '), write(V), nl.
 
 
 /*
@@ -186,18 +192,19 @@ value(GameState, Player, Value):-
     player_piece(red,Player),
     ratio_surrounding_color(GameState, red, NumRed),
     ratio_surrounding_color(GameState, blue, NumBlue),
-    Value is NumRed - NumBlue.
+    piece_difference(GameState, red, blue, Difference),
+    Value is NumRed - NumBlue - 2 * Difference.
 
 value(GameState, Player, Value):-
     player_piece(blue,Player),
     ratio_surrounding_color(GameState, red, NumRed),
     ratio_surrounding_color(GameState, blue, NumBlue),
-    Value is NumBlue - NumRed.
+    piece_difference(GameState, blue, red, Difference),
+    Value is NumBlue - NumRed - 2 * Difference.
 
 valid_moves(GameState-Player-_-Variant, Moves) :-
     findall(Move, (
         generate_moves(GameState, Player, Move),
-        check_move(GameState-Player, Move),
-        write('Found move: '), write(Move), nl
+        check_move(GameState-Player, Move)
     ), Moves).
 

@@ -154,6 +154,17 @@ ratio_surrounding_color(GameState, Color, Num):-
     sumlist(Ratios,NumSimetric),
     Num is - NumSimetric.
 
+% counts the number of pieces for a given player
+count_pieces(GameState, PlayerColor, Count) :-
+    findall(_, get_piece(GameState, _-_, PlayerColor), Pieces),
+    length(Pieces, Count).
+
+% calculates the difference in the number of pieces between two players
+piece_difference(GameState, Player1Color, Player2Color, Difference) :-
+    count_pieces(GameState, Player1Color, Count1),
+    count_pieces(GameState, Player2Color, Count2),
+    Difference is Count1 - Count2.
+
 %generates moves for a given player
 generate_moves(GameState, Player, Move) :-
     player_piece(Color, Player),
