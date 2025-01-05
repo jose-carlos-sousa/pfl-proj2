@@ -210,6 +210,8 @@ validate_move_format(Start-End) :-
     atom_chars(End, EndChars),     % Final Position
     validate_position_format(StartChars),
     validate_position_format(EndChars).
+validate_move_format(_) :-
+    nl, write('Invalid move format.'), nl, fail.
 
 validate_position_format([Col|RowChars]) :-
     char_code(Col, ColCode),

@@ -211,20 +211,20 @@ Test States
 
 %use get_initial_state(State).
 get_initial_state(State):-
-        State = 
-        [[empty,empty,red,empty,red,empty],
-        [blue,empty,empty,empty,empty,empty],
-        [empty,empty,empty,empty,empty,blue],
-        [blue,empty,empty,empty,empty,empty],
-        [empty,empty,empty,empty,empty,blue],
-        [empty,red,empty,red,empty,empty]]-player1-player2-1.
+    State = 
+    [[empty,empty,red,empty,red,empty],
+    [blue,empty,empty,empty,empty,empty],
+    [empty,empty,empty,empty,empty,blue],
+    [blue,empty,empty,empty,empty,empty],
+    [empty,empty,empty,empty,empty,blue],
+    [empty,red,empty,red,empty,empty]]-player1-player2-1.
 
 %move that kills blue piece is a7-a8.
 %display the state get_blue_piece_surrounded_v1(State),display_game(State).
 %use get_blue_piece_surrounded_v1(State),move(State,1-7-1-8,NewState),display_game(NewState).
 get_blue_piece_surrounded_v1(State):-
     State =
-     [[empty,empty,red,empty,red,empty,red,empty],
+    [[empty,empty,red,empty,red,empty,red,empty],
     [blue,empty,empty,empty,empty,empty,empty,empty],
     [empty,empty,empty,empty,empty,empty,empty,blue],
     [blue,empty,empty,empty,empty,empty,empty,empty],
@@ -236,7 +236,7 @@ get_blue_piece_surrounded_v1(State):-
 %use get_blue_piece_surrounded_v2(State),move(State,1-7-1-8,NewState),display_game(NewState).
 get_blue_piece_surrounded_v2(State):-
     State =
-     [[empty,empty,red,empty,red,empty,red,empty],
+    [[empty,empty,red,empty,red,empty,red,empty],
     [blue,empty,empty,empty,empty,empty,empty,empty],
     [empty,empty,empty,empty,empty,empty,empty,blue],
     [blue,empty,empty,empty,empty,empty,empty,empty],
@@ -248,7 +248,7 @@ get_blue_piece_surrounded_v2(State):-
 %use get_blue_piece_surrounded_v3(State),move(State,1-7-1-8,NewState),display_game(NewState).
 get_blue_piece_surrounded_v3(State):-
     State =
-     [[empty,empty,red,empty,red,empty,red,empty],
+    [[empty,empty,red,empty,red,empty,red,empty],
     [blue,empty,empty,empty,empty,empty,empty,empty],
     [empty,empty,empty,empty,empty,empty,empty,blue],
     [blue,empty,empty,empty,empty,empty,empty,empty],
@@ -259,7 +259,8 @@ get_blue_piece_surrounded_v3(State):-
 
 %use get_intermediate_state(State)
 get_intermediate_state(State):-
-    State= [[red,empty,black,empty,black,empty,black,empty],
+    State = 
+    [[red,empty,black,empty,black,empty,black,empty],
     [blue,black,black,empty,blue,red,blue,empty],
     [empty,empty,empty,empty,black,empty,black,black],
     [black,red,blue,black,black,black,black,empty],
