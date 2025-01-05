@@ -176,3 +176,10 @@ generate_moves(GameState, Player, Move) :-
     dif(C1-L1, C2-L2),
     Move = C1-L1-C2-L2.
 
+%gets all valid moves for a given player
+valid_moves(GameState-Player-_-Variant, Moves) :-
+    findall(Move, (
+        generate_moves(GameState, Player, Move),
+        check_move(GameState-Player, Move)
+    ), Moves).
+

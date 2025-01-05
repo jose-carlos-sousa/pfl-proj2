@@ -202,9 +202,3 @@ value(GameState, Player, Value):-
     piece_difference(GameState, blue, red, Difference),
     Value is NumBlue - NumRed - 2 * Difference.
 
-valid_moves(GameState-Player-_-Variant, Moves) :-
-    findall(Move, (
-        generate_moves(GameState, Player, Move),
-        check_move(GameState-Player, Move)
-    ), Moves).
-
