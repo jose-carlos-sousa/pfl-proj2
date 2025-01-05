@@ -34,8 +34,8 @@ level_of_ai(computer2_easy,1).
 level_of_ai(computer2_hard,2).
 
 %checks if player has a given piece
-player_has_piece(GameState-Player, C1-L1-_-_):-
-    get_piece(GameState, C1-L1, Piece),
+player_has_piece(Board-Player, C1-L1-_-_):-
+    get_piece(Board, C1-L1, Piece),
     player_piece(Piece, Player).
 
 %gives color of each player    

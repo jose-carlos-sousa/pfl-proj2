@@ -18,17 +18,17 @@ It calls the game loop predicate game_cycle
 play:-
     get_game_mode(GameMode),
     get_board_size(Size),
-    initial_state(GameMode-Size, GameState-Player-NextPlayer-Variant),
-    display_game(GameState-Player-NextPlayer-Variant),
-    game_cycle(GameState-Player-NextPlayer-Variant, GameMode).
+    initial_state(GameMode-Size, Board-Player-NextPlayer-Variant),
+    display_game(Board-Player-NextPlayer-Variant),
+    game_cycle(Board-Player-NextPlayer-Variant, GameMode).
 
 
 
 /*
 
-initial_state(+GameConfig, -GameState) Recieves the GameConfig -> GameMode-Size and returns GameState -> Board-Player-NextPlayer-Variant
+initial_state(+GameConfig, -GameState) Recieves the GameConfig -> GameMode-Size and returns Board -> Board-Player-NextPlayer-Variant
 
-The GameState  has the following:
+The Board  has the following:
 
 Board -> Matrix that represents the board
 Player -> Current Player who will make move
@@ -52,9 +52,9 @@ Displays the board as a Matrix using numbers for rows and letters for columns
 
 */
 
-display_game(GameState-Player-_-_):-
+display_game(Board-Player-_-_):-
     display_player(Player),
-    display_board(GameState).
+    display_board(Board).
 
 
 /*
@@ -68,19 +68,19 @@ game_cycle(+GameState,+GameMode) defines the actions to be taken in a given turn
 - goes to new iteration with the new state
 
 */
-game_cycle(GameState-Player-_-_,GameMode):-
-    game_over(GameState-Player-_-_, Winner), !,
+game_cycle(Board-Player-_-_,_):-
+    game_over(Board-Player-_-_, Winner), !,
     congratulate(Winner).
-game_cycle(GameState-Player-NextPlayer-Variant,GameMode):-
+game_cycle(Board-Player-NextPlayer-Variant,GameMode):-
     level_of_ai(Player, Level),
-    choose_move(GameState-Player-NextPlayer-Variant,Level, Move),
-    move(GameState-Player-_-Variant, Move, NewGameState),
-    display_game(NewGameState-NextPlayer-Player-Variant),
-    game_cycle(NewGameState-NextPlayer-Player-Variant,GameMode).
+    choose_move(Board-Player-NextPlayer-Variant,Level, Move),
+    move(Board-Player-NextPlayer-Variant, Move, NewGameState),
+    display_game(NewGameState),
+    game_cycle(NewGameState,GameMode).
 
-game_cycle(GameState-Player-NextPlayer-Variant,GameMode):-
-    display_game(GameState-Player-NextPlayer-Variant),
-    game_cycle(GameState-Player-NextPlayer-Variant,GameMode).
+game_cycle(Board-Player-NextPlayer-Variant,GameMode):-
+    display_game(Board-Player-NextPlayer-Variant),
+    game_cycle(Board-Player-NextPlayer-Variant,GameMode).
 
 /*
 
@@ -93,23 +93,24 @@ move(+GameState, +Move, -NewGameState) given the current game state and a move C
 - removes blocked stones and black stones(depending on variant) using remove_blocked_stones/3
 
 */
-move(GameState-Player-_-Variant, C1-L1-C2-L2, NewGameState):-
-    check_move(GameState-Player, C1-L1-C2-L2),
-    get_piece(GameState, C1-L1, Piece),
-    set_piece(GameState, C1-L1, black, TempGameState),
-    set_piece(TempGameState, C2-L2, Piece, TempGameState2),
-    remove_blocked_stones(Variant,TempGameState2, TempGameState3),
-    NewGameState = TempGameState3.
-move(GameState-player1-_-Variant, C1-L1-C2-L2, NewGameState):-
-    nl, write(' Invalid Move!'), nl,
+move(Board-Player-NextPlayer-Variant, C1-L1-C2-L2, NewBoard-NextPlayer-Player-Variant):-
+    check_move(Board-Player, C1-L1-C2-L2),
+    get_piece(Board, C1-L1, Piece),
+    set_piece(Board, C1-L1, black, TempBoard),
+    set_piece(TempBoard, C2-L2, Piece, TempBoard2),
+    remove_blocked_stones(Variant,TempBoard2, TempBoard3),
+    NewBoard = TempBoard3.
+
+move(_-player1-_-_, _, _):-
+    nl, write('Invalid Move!'), nl,
     fail.
-move(GameState-player2-_-Variant, C1-L1-C2-L2, NewGameState):-
+move(_-player2-_-_, _, _):-
     nl, write('Invalid Move!'), nl,
     fail.
 
 /*
 
-game_over(+GameState, -Winner) takes current gamestate and gives the Winner Player
+game_over(+GameState, -Winner) takes current Board and gives the Winner Player
 
 The last player with Stones remaining wins
 If a move eliminates all stones of both players, the one that made that move is the Winner
@@ -117,30 +118,30 @@ If a move eliminates all stones of both players, the one that made that move is 
 
 */
 
-game_over(GameState-Player-_-_, Winner):-
-    there_are_blue_left(GameState),
-    there_are_red_left(GameState),
+game_over(Board-_-_-_, _):-
+    there_are_blue_left(Board),
+    there_are_red_left(Board),
     fail.
 
-game_over(GameState-Player-_-_, Winner):-
-    there_are_blue_left(GameState), 
-    \+ there_are_red_left(GameState),
+game_over(Board-_-_-_, Winner):-
+    there_are_blue_left(Board), 
+    \+ there_are_red_left(Board),
     Winner = blue.
 
-game_over(GameState-Player-_-_, Winner):-
-    there_are_red_left(GameState), 
-    \+ there_are_blue_left(GameState),
+game_over(Board-_-_-_, Winner):-
+    there_are_red_left(Board), 
+    \+ there_are_blue_left(Board),
     Winner = red.
 
-game_over(GameState-Player-_-_, Winner):-
-    \+ there_are_red_left(GameState), 
-    \+ there_are_blue_left(GameState),
+game_over(Board-Player-_-_, Winner):-
+    \+ there_are_red_left(Board), 
+    \+ there_are_blue_left(Board),
     player_piece(Winner,Player).
 
 
 /*
 
-choose_move(+GameState,+Level, -Move) takes GameState and AI Level and return a Move
+choose_move(+GameState,+Level, -Move) takes Board and AI Level and return a Move
 
 For Human Player:
 Just asks for input
@@ -152,25 +153,25 @@ Level 2 -> picks randomly one of the moves with best(smallest) Value
 
 */
 
-choose_move(GameState-player1-_-Variant,Level, Move):-
+choose_move(_-player1-_-_,_, Move):-
     get_move(Move).
-choose_move(GameState-player2-_-Variant,Level, Move):-
+choose_move(_-player2-_-_,_, Move):-
     get_move(Move).
 
-choose_move(GameState-Player-_-Variant,1, Move) :-
-    valid_moves(GameState-Player-_-Variant, Moves),
+choose_move(Board-Player-_-Variant,1, Move) :-
+    valid_moves(Board-Player-_-Variant, Moves),
     random_select(Move, Moves, _Rest),
     inverse_transform_move(Move, TransformedMove),
     nl, display_color(Player) , write(' Computer (random) chose move: '), write(TransformedMove), nl.
 
-choose_move(GameState-Player-_-Variant,2, Move):-
-    valid_moves(GameState-Player-_-Variant, Moves),
-    setof(Value, NewState^Mv^( member(Mv, Moves),
-        move(GameState-Player-_-Variant, Mv, NewState),
-        value(NewState, Player, Value) ), [V|_]),
-    findall(Mv, NewState^( member(Mv, Moves),
-        move(GameState-Player-_-Variant, Mv, NewState),
-        value(NewState, Player, V) ), GoodMoves),
+choose_move(Board-Player-_-Variant,2, Move):-
+    valid_moves(Board-Player-_-Variant, Moves),
+    setof(Value, NewBoard^Mv^( member(Mv, Moves),
+        move(Board-Player-_-Variant, Mv, NewBoard-_-_-_),
+        value(NewBoard, Player, Value) ), [V|_]),
+    findall(Mv, NewBoard^( member(Mv, Moves),
+        move(Board-Player-_-Variant, Mv, NewBoard-_-_-_),
+        value(NewBoard, Player, V) ), GoodMoves),
     random_select(Move,GoodMoves,_Rest),
     inverse_transform_move(Move, TransformedMove),
     nl, display_color(Player), write(' Computer (greedy) chose move: '), write(TransformedMove), write(' with value: '), write(V), nl.
@@ -178,7 +179,7 @@ choose_move(GameState-Player-_-Variant,2, Move):-
 
 /*
 
-value(+GameState, +Player, -Value) Given a state and a player gives the Value of that State to the Player
+value(+Board, +Player, -Value) Given a state and a player gives the Value of that State to the Player
 
 Value is given by:
     -MyColorRatio + OtherColorRatio
@@ -188,17 +189,101 @@ Value is given by:
 Basically a move is good if it increases the number of your pieces that have space to move and are far away from being killed and it decreases the number and freedom of enemy pieces
 
 */
-value(GameState, Player, Value):-
+value(Board, Player, Value):-
     player_piece(red,Player),
-    ratio_surrounding_color(GameState, red, NumRed),
-    ratio_surrounding_color(GameState, blue, NumBlue),
-    piece_difference(GameState, red, blue, Difference),
+    ratio_surrounding_color(Board, red, NumRed),
+    ratio_surrounding_color(Board, blue, NumBlue),
+    piece_difference(Board, red, blue, Difference),
     Value is NumRed - NumBlue - 2 * Difference.
 
-value(GameState, Player, Value):-
+value(Board, Player, Value):-
     player_piece(blue,Player),
-    ratio_surrounding_color(GameState, red, NumRed),
-    ratio_surrounding_color(GameState, blue, NumBlue),
-    piece_difference(GameState, blue, red, Difference),
+    ratio_surrounding_color(Board, red, NumRed),
+    ratio_surrounding_color(Board, blue, NumBlue),
+    piece_difference(Board, blue, red, Difference),
     Value is NumBlue - NumRed - 2 * Difference.
 
+/*
+
+Test States
+
+*/
+
+%use get_initial_state(State).
+get_initial_state(State):-
+        State = 
+        [[empty,empty,red,empty,red,empty],
+        [blue,empty,empty,empty,empty,empty],
+        [empty,empty,empty,empty,empty,blue],
+        [blue,empty,empty,empty,empty,empty],
+        [empty,empty,empty,empty,empty,blue],
+        [empty,red,empty,red,empty,empty]]-player1-player2-1.
+
+%move that kills blue piece is a7-a8.
+%display the state get_blue_piece_surrounded_v1(State),display_game(State).
+%use get_blue_piece_surrounded_v1(State),move(State,1-7-1-8,NewState),display_game(NewState).
+get_blue_piece_surrounded_v1(State):-
+    State =
+     [[empty,empty,red,empty,red,empty,red,empty],
+    [blue,empty,empty,empty,empty,empty,empty,empty],
+    [empty,empty,empty,empty,empty,empty,empty,blue],
+    [blue,empty,empty,empty,empty,empty,empty,empty],
+    [empty,empty,empty,empty,empty,empty,empty,blue],
+    [black,red,empty,empty,empty,empty,empty,empty],
+    [blue,black,empty,empty,empty,empty,empty,blue],
+    [empty,black,empty,red,empty,red,empty,empty]]-player2-player1-1.
+
+%use get_blue_piece_surrounded_v2(State),move(State,1-7-1-8,NewState),display_game(NewState).
+get_blue_piece_surrounded_v2(State):-
+    State =
+     [[empty,empty,red,empty,red,empty,red,empty],
+    [blue,empty,empty,empty,empty,empty,empty,empty],
+    [empty,empty,empty,empty,empty,empty,empty,blue],
+    [blue,empty,empty,empty,empty,empty,empty,empty],
+    [empty,empty,empty,empty,empty,empty,empty,blue],
+    [black,red,empty,empty,empty,empty,empty,empty],
+    [blue,black,empty,empty,empty,empty,empty,blue],
+    [empty,black,empty,red,empty,red,empty,empty]]-player2-player1-2.
+
+%use get_blue_piece_surrounded_v3(State),move(State,1-7-1-8,NewState),display_game(NewState).
+get_blue_piece_surrounded_v3(State):-
+    State =
+     [[empty,empty,red,empty,red,empty,red,empty],
+    [blue,empty,empty,empty,empty,empty,empty,empty],
+    [empty,empty,empty,empty,empty,empty,empty,blue],
+    [blue,empty,empty,empty,empty,empty,empty,empty],
+    [empty,empty,empty,empty,empty,empty,empty,blue],
+    [black,red,empty,empty,empty,empty,empty,empty],
+    [blue,black,empty,empty,empty,empty,empty,blue],
+    [empty,black,empty,red,empty,red,empty,empty]]-player2-player1-3.
+
+%use get_intermediate_state(State)
+get_intermediate_state(State):-
+    State= [[red,empty,black,empty,black,empty,black,empty],
+    [blue,black,black,empty,blue,red,blue,empty],
+    [empty,empty,empty,empty,black,empty,black,black],
+    [black,red,blue,black,black,black,black,empty],
+    [empty,empty,black,red,empty,black,empty,black],
+    [black,black,blue,black,black,black,empty,black],
+    [empty,black,black,black,empty,black,blue,black],
+    [empty,red,empty,black,empty,black,empty,red]]-computer2_hard-computer1_hard-2.
+
+%use get_end_state(State),move(State,4-4-3-4,FState),display_game(FState),game_over(FState,Winner).
+get_end_state(State):-
+    State = 
+    [[empty,black,black,empty,empty,empty],
+    [black,empty,empty,red,empty,empty],
+    [empty,black,black,black,black,empty],
+    [black,black,empty,blue,black,black],
+    [empty,black,black,black,black,black],
+    [black,black,empty,black,empty,red]]-computer2_hard-computer1_hard-2.
+
+%use get_end_draw_state(State), game_over(State,Winner).
+get_end_draw_state(State):-
+    State = 
+    [[empty,black,black,empty,empty,empty],
+    [black,empty,empty,empty,empty,empty],
+    [empty,black,black,black,black,empty],
+    [black,black,empty,empty,black,black],
+    [empty,black,black,black,black,black],
+    [black,black,empty,black,empty,empty]]-computer2_hard-computer1_hard-2.
