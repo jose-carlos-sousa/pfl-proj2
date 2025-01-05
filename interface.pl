@@ -193,7 +193,7 @@ validate_AI(_, Level) :-
 get_move(Move) :-
     nl, write('Enter move (e.g., b1-c3): '), nl,
     catch(read(InputMove), _, (nl, write('Read error. This may cause the next reads to fail.'), nl, fail)),
-    validate_move_format(InputMove),
+    catch(validate_move_format(InputMove), _, (nl, write('Invalid move format.'), nl, fail)),
     transform_move(InputMove, TransformedMove),
     Move = TransformedMove.
 
