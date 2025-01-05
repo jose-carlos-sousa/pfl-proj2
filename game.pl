@@ -199,7 +199,7 @@ value(Board-_-_-_, Player, Value):-
 
 /*
 
-valid_moves(+GameState, -ListOfMoves) Given a GameState gives the the valid moves the player can make
+valid_moves(+GameState, -ListOfMoves) Given a GameState returns the valid moves the player can make
 
 */
 valid_moves(Board-Player-_-_, Moves) :-
