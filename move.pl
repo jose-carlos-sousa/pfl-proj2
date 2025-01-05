@@ -175,10 +175,3 @@ generate_moves(Board, Player, Move) :-
     dif(C1-L1, C2-L2),
     Move = C1-L1-C2-L2.
 
-%gets all valid moves for a given player
-valid_moves(Board-Player-_-_, Moves) :-
-    findall(Move, (
-        generate_moves(Board, Player, Move),
-        check_move(Board-Player, Move)
-    ), Moves).
-

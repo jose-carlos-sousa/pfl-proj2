@@ -162,10 +162,10 @@ choose_move(Board-Player-_-Variant,2, Move):-
     valid_moves(Board-Player-_-Variant, Moves),
     setof(Value, NewBoard^Mv^( member(Mv, Moves),
         move(Board-Player-_-Variant, Mv, NewBoard-_-_-_),
-        value(NewBoard, Player, Value) ), [V|_]),
+        value(NewBoard-_-_-_, Player, Value) ), [V|_]),
     findall(Mv, NewBoard^( member(Mv, Moves),
         move(Board-Player-_-Variant, Mv, NewBoard-_-_-_),
-        value(NewBoard, Player, V) ), GoodMoves),
+        value(NewBoard-_-_-_, Player, V) ), GoodMoves),
     random_select(Move,GoodMoves,_Rest),
     inverse_transform_move(Move, TransformedMove),
     nl, display_color(Player), write(' Computer (greedy) chose move: '), write(TransformedMove), write(' with value: '), write(V), nl.
@@ -173,7 +173,7 @@ choose_move(Board-Player-_-Variant,2, Move):-
 
 /*
 
-value(+Board, +Player, -Value) Given a state and a player gives the Value of that State to the Player
+value(+GameState, +Player, -Value) Given a state and a player gives the Value of that State to the Player
 
 Value is given by:
     -MyColorRatio + OtherColorRatio
@@ -183,19 +183,31 @@ Value is given by:
 Basically a move is good if it increases the number of your pieces that have space to move and are far away from being killed and it decreases the number and freedom of enemy pieces
 
 */
-value(Board, Player, Value):-
+value(Board-_-_-_, Player, Value):-
     player_piece(red,Player),
     ratio_surrounding_color(Board, red, NumRed),
     ratio_surrounding_color(Board, blue, NumBlue),
     piece_difference(Board, red, blue, Difference),
     Value is NumRed - NumBlue - 2 * Difference.
 
-value(Board, Player, Value):-
+value(Board-_-_-_, Player, Value):-
     player_piece(blue,Player),
     ratio_surrounding_color(Board, red, NumRed),
     ratio_surrounding_color(Board, blue, NumBlue),
     piece_difference(Board, blue, red, Difference),
     Value is NumBlue - NumRed - 2 * Difference.
+
+/*
+
+valid_moves(+GameState, -ListOfMoves) Given a GameState the the valid moves the player can make
+
+*/
+valid_moves(Board-Player-_-_, Moves) :-
+    findall(Move, (
+        generate_moves(Board, Player, Move),
+        check_move(Board-Player, Move)
+    ), Moves).
+
 
 /*
 
