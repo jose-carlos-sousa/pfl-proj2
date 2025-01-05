@@ -247,3 +247,10 @@ num_to_col(Num, Col) :-
     Code is Num + 96, % 1 -> 'a'
     char_code(Col, Code).
 
+play_again(Res):-
+    write('Do you wish to play again:'), nl,
+    write('1. Yes'), nl,
+    write('2. No'), nl,
+    read(Res).
+eval_play_again(2):- fail.
+eval_play_again(1):- play.
